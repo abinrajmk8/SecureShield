@@ -143,4 +143,14 @@ router.patch('/api/securityreports/:id', async (req, res) => {
   }
 });
 
+router.get('/api/securityreports', async (req, res) => {
+  try {
+    const reports = await SecurityReport.find();
+    res.json(reports);
+  } catch (err) {
+    console.error('Error fetching reports:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 export default router;

@@ -139,11 +139,6 @@ const DeviceTables = ({ updateOnlineDevices }) => {
       console.error('Error during port scan:', error);
     });
   };
-  
-
-  const handlePing = (deviceId) => {
-    console.log('Ping device:', deviceId);
-  };
 
   const sortedDevices = Array.isArray(devices) ? devices.sort((a, b) => {
     if (a.status === 'High' && b.status === 'Low') return -1;
@@ -215,12 +210,6 @@ const DeviceTables = ({ updateOnlineDevices }) => {
                   >
                     Check
                   </button>
-                  {/* <button 
-                    onClick={() => handlePing(device.id)} 
-                    className='bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded'
-                  >
-                    Ping
-                  </button> */}
                 </td>
               </tr>
             ))}

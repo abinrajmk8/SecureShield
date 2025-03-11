@@ -5,9 +5,67 @@ const PortScanWindow = ({ device, onClose }) => {
 
   useEffect(() => {
     if (device?.scanResult) {
-      setScanResult(device.scanResult);  // Set scan result when it is available
+      setScanResult(device.scanResult); // Set scan result when it is available
     }
   }, [device]);
+
+  // Function to handle the "Report+" button click
+  const handleReport = async () => {
+    if (!scanResult || !scanResult.openPorts || scanResult.openPorts.length === 0) {
+      alert('No open ports to report.');
+      return;
+    }
+
+    // Determine severity based on the number of open ports
+    let severity;
+    if (scanResult.openPorts.length >= 5) {
+      severity = 'Critical';
+    } else if (scanResult.openPorts.length >= 3) {
+      severity = 'High';
+    } else if (scanResult.openPorts.length >= 1) {
+      severity = 'Medium';
+    } else {
+      severity = 'Low';
+    }
+
+    // Prepare the report data
+    const reportData = {
+      type: 'Open Port Found',
+      severity,
+      status: 'Unresolved',
+      description: `Open ports detected on device ${device.name} (${device.ip}).`,
+      sourceIP: device.ip,
+      destinationIP: device.ip,
+      ports: scanResult.openPorts.map(port => port.port),
+      detectedBy: 'Port Scanner',
+      recommendation: 'Investigate and close unnecessary open ports.',
+      devicePriority: 'High',
+      macAddress: device.mac,
+      deviceName: device.name,
+    };
+
+    try {
+      // Make the API call to create a new security report
+      const response = await fetch('http://localhost:3000/api/securityreports', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reportData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create security report');
+      }
+
+      const data = await response.json();
+      console.log('Report created successfully:', data);
+      alert('Report submitted successfully!');
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      alert('Failed to submit report. Please try again.');
+    }
+  };
 
   return (
     <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50'>
@@ -15,6 +73,18 @@ const PortScanWindow = ({ device, onClose }) => {
         <h2 className='text-3xl font-bold text-gray-100 mb-6'>Port Scan Results for {device.name}</h2>
         <p className='text-gray-400 mb-2'>IP Address: {device.ip}</p>
         <p className='text-gray-400 mb-6'>MAC Address: {device.mac}</p>
+
+        {/* Report+ Button (Visible only if there are open ports) */}
+        {scanResult?.openPorts?.length > 0 && (
+          <div className='flex justify-end mb-6'>
+            <button
+              onClick={handleReport}
+              className='bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-all duration-200'
+            >
+              Report+
+            </button>
+          </div>
+        )}
 
         {scanResult ? (
           <div className='overflow-x-auto'>
@@ -61,6 +131,5 @@ const PortScanWindow = ({ device, onClose }) => {
     </div>
   );
 };
-
 
 export default PortScanWindow;
