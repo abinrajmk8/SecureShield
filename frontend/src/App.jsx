@@ -17,15 +17,41 @@ const App = () => {
     if (token) setIsLoggedIn(true);
   }, []);
 
-  const handleLogin = (token) => {
+  const handleLogin = (token, username) => {
     localStorage.setItem('token', token);
+    localStorage.setItem('username', username); // Store username
     setIsLoggedIn(true);
   };
+  
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setIsLoggedIn(false);
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const username = localStorage.getItem('username'); // Retrieve username
+  
+      if (!token || !username) return;
+  
+      // Send logout request with username
+      await fetch('http://localhost:3000/api/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username }) // Send username
+      });
+  
+      console.log(`User ${username} logged out`);
+  
+      // Clear token and username from local storage
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      setIsLoggedIn(false);
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
+  
+  
 
   return (
     <div className="flex h-screen bg-gray-900 text-gray-100 overflow-hidden">

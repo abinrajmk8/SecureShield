@@ -39,12 +39,13 @@ const Sidebar = ({ handleLogout }) => {
 
         {/* Logout Button - Now Styled Like Other Items */}
         <button
-          onClick={handleLogout}
-          className="flex items-center p-4 w-full text-sm font-medium rounded-lg hover:bg-gray-700 text-white"
+        onClick={handleLogout}
+        className="flex items-center p-4 w-full text-sm font-medium rounded-lg hover:bg-gray-700 text-white"
         >
-          <LogOut size={20} />
-          {isSidebarOpen && <span className="ml-4">Logout</span>}
+        <LogOut size={20} />
+        {isSidebarOpen && <span className="ml-4">Logout</span>}
         </button>
+
 
       </div>
     </div>
