@@ -8,6 +8,7 @@ const UserTable = ({ users, isAdmin }) => {
         <table className='min-w-full bg-gray-700 text-gray-100'>
           <thead>
             <tr>
+              <th className='py-2 px-4 border-b border-gray-800 border-r text-center'>Name</th>
               <th className='py-2 px-4 border-b border-gray-800 border-r text-center'>Email</th>
               <th className='py-2 px-4 border-b border-gray-800 border-r text-center'>Role</th>
               <th className='py-2 px-4 border-b border-gray-800 border-r text-center'>Status</th>
@@ -17,6 +18,7 @@ const UserTable = ({ users, isAdmin }) => {
           <tbody>
             {users.map((user) => (
               <tr key={user._id}>
+                <td className='py-2 px-4 border-b border-gray-600 border-r text-center'>{user.name}</td>
                 <td className='py-2 px-4 border-b border-gray-600 border-r text-center'>{user.username}</td>
                 <td className='py-2 px-4 border-b border-gray-600 border-r text-center'>{user.role}</td>
                 <td className='py-2 px-4 border-b border-gray-600 border-r text-center'>

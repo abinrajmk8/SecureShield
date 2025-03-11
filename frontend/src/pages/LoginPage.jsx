@@ -21,6 +21,7 @@ const LoginPage = ({ handleLogin }) => {
       if (response.ok) {
         localStorage.setItem("token", data.token);
         localStorage.setItem("username", username); // Store username in localStorage
+        localStorage.setItem("role", data.role); // Store role in localStorage
         handleLogin(data.token, username); // Pass username to handleLogin
         setError(""); // Clear error on success
       } else {

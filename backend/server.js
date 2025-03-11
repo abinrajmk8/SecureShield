@@ -7,6 +7,7 @@ import SecurityReportRouter from "./HelperRoutes/SecurityReport.js";
 import authRoutes from "./HelperRoutes/authRoutes.js";
 import deviceRoutes from "./HelperRoutes/deviceRoutes.js";
 import userRoutes from "./HelperRoutes/userList.js";
+import currentUser from "./HelperRoutes/currentUser.js";
 
 const app = express();
 const port = 3000;
@@ -21,6 +22,7 @@ app.use("/api",authRoutes);
 app.use(SecurityReportRouter);
 app.use("/api/devices", deviceRoutes);
 app.use("/api", userRoutes);
+app.use("/api", currentUser);
 
 
 
