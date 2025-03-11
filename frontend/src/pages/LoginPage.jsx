@@ -20,7 +20,8 @@ const LoginPage = ({ handleLogin }) => {
 
       if (response.ok) {
         localStorage.setItem("token", data.token);
-        handleLogin(data.token);
+        localStorage.setItem("username", username); // Store username in localStorage
+        handleLogin(data.token, username); // Pass username to handleLogin
         setError(""); // Clear error on success
       } else {
         setError("Invalid username or password");
@@ -65,7 +66,7 @@ const LoginPage = ({ handleLogin }) => {
           Login
         </motion.h1>
 
-        <form onSubmit={onSubmit}>
+        <form onSubmit={onSubmit} action="/api/login" method="POST">
           <div className="mb-4">
             <label htmlFor="username" className="block text-sm font-medium text-white">
               Username
@@ -73,10 +74,12 @@ const LoginPage = ({ handleLogin }) => {
             <input
               type="text"
               id="username"
+              name="username" // Add name attribute
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full px-3 py-2 mt-1 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
+              autoComplete="username" // Enable autocomplete for username
             />
           </div>
 
@@ -87,6 +90,7 @@ const LoginPage = ({ handleLogin }) => {
             <input
               type="password"
               id="password"
+              name="password" // Add name attribute
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
@@ -94,6 +98,7 @@ const LoginPage = ({ handleLogin }) => {
               }}
               className="w-full px-3 py-2 mt-1 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
+              autoComplete="current-password" // Enable autocomplete for password
             />
           </div>
 

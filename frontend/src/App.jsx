@@ -22,15 +22,14 @@ const App = () => {
     localStorage.setItem('username', username); // Store username
     setIsLoggedIn(true);
   };
-  
 
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem('token');
       const username = localStorage.getItem('username'); // Retrieve username
-  
+
       if (!token || !username) return;
-  
+
       // Send logout request with username
       await fetch('http://localhost:3000/api/logout', {
         method: 'POST',
@@ -39,9 +38,9 @@ const App = () => {
         },
         body: JSON.stringify({ username }) // Send username
       });
-  
+
       console.log(`User ${username} logged out`);
-  
+
       // Clear token and username from local storage
       localStorage.removeItem('token');
       localStorage.removeItem('username');
@@ -50,12 +49,10 @@ const App = () => {
       console.error('Logout failed:', error);
     }
   };
-  
-  
 
   return (
     <div className="flex h-screen bg-gray-900 text-gray-100 overflow-hidden">
-      {isLoggedIn && <Sidebar handleLogout={handleLogout} />} 
+      {isLoggedIn && <Sidebar handleLogout={handleLogout} />}
       <Routes>
         {!isLoggedIn ? (
           <>

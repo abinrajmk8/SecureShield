@@ -10,7 +10,8 @@ const updateExistingUsers = async () => {
       role: 'user', // Default role
       lastLogin: null,
       lastLogout: null,
-      activeStatus: 'offline'
+      activeStatus: 'offline',
+      name: "Guest User" // Set name if missing
     };
 
     await User.updateMany({}, { $set: updateFields });

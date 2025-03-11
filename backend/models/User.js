@@ -4,7 +4,8 @@ const userSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    default: "Guest User"  // Set default name
   },
   username: {
     type: String,
@@ -15,6 +16,11 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true // Hashed password
+  },
+  companyId: {
+    type: String,
+    required: true,
+    trim: true
   },
   role: {
     type: String,

@@ -1,3 +1,4 @@
+
 import express from "express";
 import cors from "cors";
 import {exec} from 'child_process'
@@ -5,6 +6,7 @@ import connectDB from "./db.js";
 import SecurityReportRouter from "./HelperRoutes/SecurityReport.js";
 import authRoutes from "./HelperRoutes/authRoutes.js";
 import deviceRoutes from "./HelperRoutes/deviceRoutes.js";
+import userRoutes from "./HelperRoutes/userList.js";
 
 const app = express();
 const port = 3000;
@@ -18,6 +20,7 @@ app.use(cors());
 app.use("/api",authRoutes);
 app.use(SecurityReportRouter);
 app.use("/api/devices", deviceRoutes);
+app.use("/api", userRoutes);
 
 
 
