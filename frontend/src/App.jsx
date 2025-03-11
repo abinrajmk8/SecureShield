@@ -32,15 +32,18 @@ const App = () => {
       {isLoggedIn && <Sidebar handleLogout={handleLogout} />} 
       <Routes>
         {!isLoggedIn ? (
-          <Route path="/" element={<LoginPage handleLogin={handleLogin} />} />
+          <>
+            <Route path="/" element={<LoginPage handleLogin={handleLogin} />} />
+            <Route path="*" element={<Navigate to="/" replace />} /> {/* Always redirect to login */}
+          </>
         ) : (
           <>
             <Route path="/Home" element={<Home />} />
             <Route path="/Users" element={<Users />} />
             <Route path="/Settings" element={<Settings />} />
             <Route path="/Network" element={<Network />} />
-            <Route path='Reports' element={<Reports />} />
-            <Route path="*" element={<Navigate to="/Home" />} />
+            <Route path="/Reports" element={<Reports />} />
+            <Route path="*" element={<Navigate to="/Home" replace />} />
           </>
         )}
       </Routes>
