@@ -1,25 +1,24 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import cors from "cors";
 
-dotenv.config(
-    {
-        path:"./config.env"
+dotenv.config();
+
+const connectDB = async () => {
+  try {
+    if (!process.env.MONGO_URI) {
+      throw new Error("MONGO_URI is not defined. Check your .env file.");
     }
-);
 
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
 
-const connectDB=() =>{
-
-    mongoose.connect('mongodb+srv://miniproject07s:G16PObcPYM3KeqYs@network.k0ddo.mongodb.net/?retryWrites=true&w=majority&appName=networkc',{
-        dbName:process.env.networkDevices
-    }).then(()=>{
-        console.log("connected to database");
-    }).catch(err=>{
-        console.log("some error occured while connecting to database :" ,err)
-    })
-
-}
-
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+  } catch (error) {
+    console.error("❌ Some error occurred while connecting to database:", error.message);
+    process.exit(1); // Exit process with failure
+  }
+};
 
 export default connectDB;

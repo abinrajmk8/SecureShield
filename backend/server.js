@@ -1,6 +1,7 @@
 
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
 import {exec} from 'child_process'
 import connectDB from "./db.js";
 import SecurityReportRouter from "./HelperRoutes/SecurityReport.js";
@@ -9,8 +10,10 @@ import deviceRoutes from "./HelperRoutes/deviceRoutes.js";
 import userRoutes from "./HelperRoutes/userList.js";
 import currentUser from "./HelperRoutes/currentUser.js";
 
+dotenv.config();
+//console.log(process.env.MONGO_URI);
 const app = express();
-const port = 3000;
+const PORT = process.env.PORT || 3000;
 
 
 app.use(express.json());
@@ -124,7 +127,7 @@ function parseNmapOutput(ip, stdout) {
 
 
 
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Server is running on port ${port}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on port ${PORT}`);
 });
 
