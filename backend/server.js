@@ -9,6 +9,9 @@ import authRoutes from "./HelperRoutes/authRoutes.js";
 import deviceRoutes from "./HelperRoutes/deviceRoutes.js";
 import userRoutes from "./HelperRoutes/userList.js";
 import currentUser from "./HelperRoutes/currentUser.js";
+import testRoute from "./HelperRoutes/testRoute.js";
+import updateUser from "./HelperRoutes/updateUser.js";
+import deleteUser from "./HelperRoutes/deleteUser.js";
 
 dotenv.config();
 //console.log(process.env.MONGO_URI);
@@ -20,12 +23,15 @@ app.use(express.json());
 app.use(cors());
  connectDB();
 
+app.use("/test",testRoute);
 
 app.use("/api",authRoutes);
 app.use(SecurityReportRouter);
 app.use("/api/devices", deviceRoutes);
 app.use("/api", userRoutes);
 app.use("/api", currentUser);
+app.use("/api",updateUser);
+app.use("/api",deleteUser);
 
 
 

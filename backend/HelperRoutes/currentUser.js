@@ -5,13 +5,13 @@ import User from '../models/User.js';
 
 const router = express.Router();
 
-// GET route to fetch the current user
+// GET route to fetch the current user and their role 
 router.get('/currentUser', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1]; // Extract token from header
     if (!token) return res.status(401).json({ message: 'Unauthorized' });
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "myverysecuresecret"); // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); // Verify token
     const user = await User.findById(decoded.userId, { password: 0 }); // Exclude password field
 
     if (!user) return res.status(404).json({ message: 'User not found' });

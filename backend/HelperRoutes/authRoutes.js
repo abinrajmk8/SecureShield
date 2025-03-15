@@ -46,7 +46,7 @@ router.post('/login', async (req, res) => {
       token, 
       username: user.username, 
       role: user.role, // Include role in the response
-      userId: user._id // Include user ID in the response
+     // userId: user._id // Include user ID in the response
     });
 
   } catch (err) {
@@ -96,10 +96,12 @@ router.post('/register', async (req, res) => {
       companyId: uniqueCompanyId // Assign unique companyId
     });
 
+    
     // Save user to the database
     await newUser.save();
 
     res.status(201).json({ message: 'User registered successfully', companyId: uniqueCompanyId });
+    
   } catch (err) {
     console.error('Registration error:', err);
     res.status(500).json({ message: 'Server error' });

@@ -38,6 +38,6 @@ const sendMail = async (to, subject, text) => {
 
 
 
-
+sendMail('abinrajmk8@gmail.com', 'Test Email', 'This is a test email');
 
 export default sendMail;
