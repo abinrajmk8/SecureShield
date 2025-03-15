@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import sendMail from '../utils/sendMail.js';
 
 const router = express.Router();
 
@@ -99,6 +100,24 @@ router.post('/register', async (req, res) => {
     
     // Save user to the database
     await newUser.save();
+
+    // **Send Registration Email**
+    const subject = "Account Successfully Registered!";
+    const message = `
+      Hello ${name},
+
+      Your account has been successfully registered.
+      
+      ✅ Username: ${username}  
+      ✅ Password: ${password}  
+      
+      🔹 Please update your password once you log in.
+
+      Thank you,
+      Admin Team
+    `;
+
+    await sendMail(username, subject, message);
 
     res.status(201).json({ message: 'User registered successfully', companyId: uniqueCompanyId });
     

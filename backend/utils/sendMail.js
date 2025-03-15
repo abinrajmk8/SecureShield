@@ -1,3 +1,4 @@
+// /backend/utils/sendMail.js
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import { join, dirname } from 'path';
@@ -9,8 +10,7 @@ const __dirname = dirname(__filename);
 
 // Load .env from the root directory
 dotenv.config({ path: join(__dirname, '../.env') });
-console.log(process.env.EMAIL_USER);
-console.log(process.env.EMAIL_PASS);
+
 
 const sendMail = async (to, subject, text) => {
   try {
@@ -38,6 +38,6 @@ const sendMail = async (to, subject, text) => {
 
 
 
-sendMail('abinrajmk8@gmail.com', 'Test Email', 'This is a test email');
+
 
 export default sendMail;

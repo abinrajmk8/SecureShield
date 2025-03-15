@@ -2,6 +2,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import sendMail from '../utils/sendMail.js';
 
 const router = express.Router();
 
@@ -36,6 +37,19 @@ router.delete('/delete-user', async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+      // **Send Deletion Email**
+        const subject = "Your Account Has been Deleted!";
+        const message = `
+          Hello ${user.name},
+    
+          Your account has been Deleted by Admin.
+          
+    
+          Thank you,
+          Admin Team
+        `;
+    
+        await sendMail(username, subject, message);
 
     res.status(200).json({ message: `User ${username} deleted successfully` });
   } catch (err) {
