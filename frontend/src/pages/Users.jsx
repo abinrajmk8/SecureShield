@@ -3,7 +3,7 @@ import Header from '../components/common/Header';
 import StatusCard from '../components/common/StatusCard';
 import { UserPlus, Users as UsersIcon, UserCheck, UserX, UserCog, RefreshCw } from 'lucide-react';
 import UserTable from '../components/Tables/UserTable';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const Users = () => {
@@ -11,15 +11,21 @@ const Users = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [currentUser, setCurrentUser] = useState(null);
-  const [addUserLoading, setAddUserLoading] = useState(false); 
+  const [addUserLoading, setAddUserLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'user' });
-
+  const [newUser, setNewUser] = useState({ 
+    name: '', 
+    email: '', 
+    password: '', 
+    confirmPassword: '', 
+    role: 'user' 
+  });
 
   useEffect(() => {
     fetchUsers();
     fetchCurrentUser();
   }, []);
+
   const updateUser = async (username, newRole) => {
     try {
       const token = localStorage.getItem('token');
@@ -38,10 +44,13 @@ const Users = () => {
 
       const updatedUser = await response.json();
       setUsers(users.map(user => user.username === username ? { ...user, role: newRole } : user));
+     // toast.success('User role updated successfully!', { autoClose: 1500 });
     } catch (error) {
       console.error('Error updating user role:', error);
+      toast.error('Error updating user role. Please try again.', { autoClose: 2000 });
     }
   };
+
   const deleteUser = async (username) => {
     try {
       const token = localStorage.getItem('token');
@@ -59,8 +68,10 @@ const Users = () => {
       }
 
       setUsers(users.filter(user => user.username !== username));
+      toast.success('User deleted successfully!', { autoClose: 1500 });
     } catch (error) {
       console.error('Error deleting user:', error);
+      toast.error('Error deleting user. Please try again.', { autoClose: 2000 });
     }
   };
 
@@ -78,13 +89,13 @@ const Users = () => {
 
   const fetchCurrentUser = async () => {
     try {
-      const token = localStorage.getItem('token'); // Get token from local storage
+      const token = localStorage.getItem('token');
       if (!token) throw new Error('No token found');
 
       const response = await fetch('http://localhost:3000/api/currentUser', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`, // Attach token
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -116,117 +127,104 @@ const Users = () => {
     .filter((user) => (filter === 'all' ? true : filter === 'admin' ? user.role === 'admin' : user.activeStatus === 'online'))
     .sort((a, b) => (a.role === 'admin' ? -1 : 1));
 
-    const handleAddUser = async () => {
-      if (!newUser.name || !newUser.email || !newUser.password || !newUser.confirmPassword) {
-        toast.error('Please fill all fields.');
-        return;
+  const handleAddUser = async () => {
+    if (!newUser.name || !newUser.email || !newUser.password || !newUser.confirmPassword) {
+      toast.error('Please fill all fields.');
+      return;
+    }
+    if (newUser.password !== newUser.confirmPassword) {
+      toast.error('Passwords do not match.', { autoClose: 500 });
+      return;
+    }
+    setAddUserLoading(true);
+    try {
+      const res = await fetch('http://localhost:3000/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newUser.name,
+          username: newUser.email,  
+          password: newUser.password, 
+          role: newUser.role || 'user', 
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to register user');
       }
-      if (newUser.password !== newUser.confirmPassword) {
-        toast.error('Passwords do not match.', { autoClose: 500 });
-        return;
-      }
-      setAddUserLoading(true);
-      try {
-        const res = await fetch('http://localhost:3000/api/register', { // 🔥 Use correct route
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: newUser.name,
-            username: newUser.email,  
-            password: newUser.password, 
-            role: newUser.role || 'user', 
-          }),
-        });
-    
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.message || 'Failed to register user');
-        }
-    
-        const data = await res.json();
-        console.log('User registered successfully:', data);
-        toast.success('User added successfully!', { autoClose: 1500 });
-    
-        setShowAddModal(false);
-        setNewUser({ name: '', username: '', password: '', role: 'user' }); // Reset fields
-        fetchUsers(); // Refresh user list
-      } catch (error) {
-        console.error('Error registering user:', error);
-        toast.error(error.message || 'Failed to add user. Please try again.', { autoClose: 2000 });
-      }
-      finally {
-        setAddUserLoading(false); // Re-enable Add button
-      }
-    };
-    
-    
+
+      const data = await res.json();
+      console.log('User registered successfully:', data);
+      toast.success('User added successfully!', { autoClose: 1500 });
+
+      setShowAddModal(false);
+      setNewUser({ name: '', email: '', password: '', confirmPassword: '', role: 'user' }); // Reset fields
+      fetchUsers(); // Refresh user list
+    } catch (error) {
+      console.error('Error registering user:', error);
+      toast.error(error.message || 'Failed to add user. Please try again.', { autoClose: 2000 });
+    } finally {
+      setAddUserLoading(false); // Re-enable Add button
+    }
+  };
 
   return (
     <div className='flex-1 overflow-auto relative z-10'>
-     <ToastContainer
-  autoClose={2500} // Auto-close after 2.5 seconds
-  closeButton={true} // Show close button
-  closeOnClick={true} // Allow closing by clicking the toast
-  pauseOnHover={true} // Pause auto-close on hover
-  draggable={true} // Allow dragging to dismiss
-/>
+    
       <Header title='User Management' />
       <main className='max-w-7xl mx-auto py-6 px-4 lg:px-8'>
-      {showAddModal && (
-  <div className='fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50'>
-    <div className='bg-gray-800 p-6 rounded-lg shadow-lg w-96'>
-      <h2 className='text-lg font-bold text-white mb-4'>Add New User</h2>
+        {showAddModal && (
+          <div className='fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50'>
+            <div className='bg-gray-800 p-6 rounded-lg shadow-lg w-96'>
+              <h2 className='text-lg font-bold text-white mb-4'>Add New User</h2>
 
-      {/* Hidden input to prevent autofill
-      <input type="text" style={{ display: 'none' }} autoComplete="off" /> */}
-
-      <input 
-        type='text' placeholder='Name' value={newUser.name} 
-        onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-        className='w-full mb-2 p-2 bg-gray-700 text-white rounded'
-      />
-      <input 
-        type='email' placeholder='Email' value={newUser.email} 
-        onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-        autoComplete='off'
-        className='w-full mb-2 p-2 bg-gray-700 text-white rounded'
-      />
-      <input 
-        type='password' placeholder='New Password' value={newUser.password || ''}  
-        onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-        autoComplete='new-password'
-        className='w-full mb-2 p-2 bg-gray-700 text-white rounded'
-      />
-
-      <input 
-        type='password' placeholder='Confirm Password' value={newUser.confirmPassword || ''}  
-        onChange={(e) => setNewUser({ ...newUser, confirmPassword: e.target.value })}
-        autoComplete='new-password'
-        className='w-full mb-4 p-2 bg-gray-700 text-white rounded'
-      />
-      <select 
-        value={newUser.role} 
-        onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-        className='w-full mb-4 p-2 bg-gray-700 text-white rounded'
-      >
-        <option value='user'>User</option>
-        <option value='admin'>Admin</option>
-      </select>
-      <div className='flex justify-end'>
-        <button onClick={() => setShowAddModal(false)} className='text-gray-300 hover:text-white mr-3'>Cancel</button>
-        <button 
-        onClick={handleAddUser}
-        disabled={addUserLoading} // Disable button when loading
-        className={`bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded
-        ${
-        addUserLoading ? 'opacity-50 cursor-not-allowed' : ''
-        }`}>
-          {addUserLoading ? 'Adding...' : 'Add'} 
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+              <input 
+                type='text' placeholder='Name' value={newUser.name} 
+                onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                className='w-full mb-2 p-2 bg-gray-700 text-white rounded'
+              />
+              <input 
+                type='email' placeholder='Email' value={newUser.email} 
+                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                autoComplete='off'
+                className='w-full mb-2 p-2 bg-gray-700 text-white rounded'
+              />
+              <input 
+                type='password' placeholder='New Password' value={newUser.password || ''}  
+                onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                autoComplete='new-password'
+                className='w-full mb-2 p-2 bg-gray-700 text-white rounded'
+              />
+              <input 
+                type='password' placeholder='Confirm Password' value={newUser.confirmPassword || ''}  
+                onChange={(e) => setNewUser({ ...newUser, confirmPassword: e.target.value })}
+                autoComplete='new-password'
+                className='w-full mb-4 p-2 bg-gray-700 text-white rounded'
+              />
+              <select 
+                value={newUser.role} 
+                onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                className='w-full mb-4 p-2 bg-gray-700 text-white rounded'
+              >
+                <option value='user'>User</option>
+                <option value='admin'>Admin</option>
+              </select>
+              <div className='flex justify-end'>
+                <button onClick={() => setShowAddModal(false)} className='text-gray-300 hover:text-white mr-3'>Cancel</button>
+                <button 
+                  onClick={handleAddUser}
+                  disabled={addUserLoading} // Disable button when loading
+                  className={`bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded ${
+                    addUserLoading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {addUserLoading ? 'Adding...' : 'Add'} 
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className='grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8'>
           {statusData.map((status, index) => (
@@ -249,7 +247,8 @@ const Users = () => {
             {isAdmin ? (
               <button
                 onClick={() => setShowAddModal(true)}
-               className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center'>
+                className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center'
+              >
                 <UserPlus className='mr-2' />
                 Add User
               </button>
@@ -265,7 +264,15 @@ const Users = () => {
           </div>
         </div>
 
-        {loading ? <p className='text-gray-300'>Loading users...</p> : <UserTable isAdmin={isAdmin} users={filteredUsers} updateUser={updateUser} deleteUser={deleteUser} />}
+        {loading ? <p className='text-gray-300'>Loading users...</p> : (
+          <UserTable 
+            isAdmin={isAdmin} 
+            users={filteredUsers} 
+            updateUser={updateUser} 
+            deleteUser={deleteUser} 
+            toast={toast} // Pass the `toast` function to `UserTable`
+          />
+        )}
       </main>
     </div>
   );

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Route, Routes, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
 import Users from './pages/Users';
@@ -52,6 +54,13 @@ const App = () => {
 
   return (
     <div className="flex h-screen bg-gray-900 text-gray-100 overflow-hidden">
+      <ToastContainer
+        autoClose={2500} // Auto-close after 2.5 seconds
+        closeButton={true} // Show close button
+        closeOnClick={true} // Allow closing by clicking the toast
+        pauseOnHover={true} // Pause auto-close on hover
+        draggable={true} // Allow dragging to dismiss
+      />
       {isLoggedIn && <Sidebar handleLogout={handleLogout} />}
       <Routes>
         {!isLoggedIn ? (

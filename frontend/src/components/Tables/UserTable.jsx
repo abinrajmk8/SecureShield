@@ -1,60 +1,57 @@
-import React ,{useEffect,useState} from 'react';
-import { Edit, Eye ,X} from 'lucide-react';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import React, { useState } from 'react';
+import { Edit, Eye, X } from 'lucide-react';
 
-const UserTable = ({ users, isAdmin ,updateUser,deleteUser}) => {
-const [isModalOpen, setIsModalOpen] = useState(false);
-const [selectedUser, setSelectedUser] = useState(null);
-const [updatedRole, setUpdatedRole] = useState('');
-const [loading, setLoading] = useState(false); // Add this line
+const UserTable = ({ users, isAdmin, updateUser, deleteUser, toast }) => { // Add `toast` as a prop
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [updatedRole, setUpdatedRole] = useState('');
+  const [loading, setLoading] = useState(false);
 
-// Open modal and set user data
-const handleEditClick = (user) => {
-  setSelectedUser(user);
-  setUpdatedRole(user.role);
-  setIsModalOpen(true);
-};
+  // Open modal and set user data
+  const handleEditClick = (user) => {
+    setSelectedUser(user);
+    setUpdatedRole(user.role);
+    setIsModalOpen(true);
+  };
 
-// Close modal
-const closeModal = () => {
-  setIsModalOpen(false);
-  setSelectedUser(null);
-};
-const handleSave = async () => {
-  if (selectedUser && updatedRole) {
-    setLoading(true); // Disable buttons
-    try {
-      await updateUser(selectedUser.username, updatedRole);
-      toast.success('User role updated successfully!');
-      closeModal();
-    } catch (error) {
-      toast.error('Error updating user role. Please try again.');
-    } finally {
-      setLoading(false); // Re-enable buttons
+  // Close modal
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  const handleSave = async () => {
+    if (selectedUser && updatedRole) {
+      setLoading(true); // Disable buttons
+      try {
+        await updateUser(selectedUser.username, updatedRole);
+        toast.success('User role updated successfully!'); // Use the `toast` prop
+        closeModal();
+      } catch (error) {
+        toast.error('Error updating user role. Please try again.'); // Use the `toast` prop
+      } finally {
+        setLoading(false); // Re-enable buttons
+      }
     }
-  }
-};
+  };
 
-// Handle Delete button click
-const handleDelete = async () => {
-  if (selectedUser) {
-    setLoading(true); // Disable buttons
-    try {
-      await deleteUser(selectedUser.username);
-      toast.success('User deleted successfully!');
-      closeModal();
-    } catch (error) {
-      toast.error('Error deleting user. Please try again.');
-    } finally {
-      setLoading(false); // Re-enable buttons
+  const handleDelete = async () => {
+    if (selectedUser) {
+      setLoading(true); // Disable buttons
+      try {
+        await deleteUser(selectedUser.username);
+        toast.success('User deleted successfully!'); // Use the `toast` prop
+        closeModal();
+      } catch (error) {
+        toast.error('Error deleting user. Please try again.'); // Use the `toast` prop
+      } finally {
+        setLoading(false); // Re-enable buttons
+      }
     }
-  }
-};
+  };
 
   return (
     <div className='bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700'>
-      <ToastContainer autoClose={2500} />
       <div className='overflow-x-auto'>
         <table className='min-w-full bg-gray-700 text-gray-100'>
           <thead>
@@ -123,78 +120,77 @@ const handleDelete = async () => {
           </tbody>
         </table>
       </div>
- {/* Edit User Modal */}
- {isModalOpen && selectedUser && (
-  <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50'>
-    <div className='bg-gray-800 p-6 rounded-lg shadow-lg w-96'>
-      {/* Modal Header with Close Button */}
-      <div className='flex justify-between items-center mb-4'>
-        <h2 className='text-xl font-semibold text-gray-100'>Edit User</h2>
-        <button
-          onClick={closeModal}
-          className='text-gray-300 hover:text-white'
-        >
-          <X size={20} /> {/* Close icon */}
-        </button>
-      </div>
 
-      {/* Modal Body */}
-      <div className='mb-4'>
-        <label className='block text-gray-100 mb-2'>Name</label>
-        <input
-          type='text'
-          value={selectedUser.name}
-          readOnly
-          className='bg-gray-700 text-gray-100 px-3 py-2 rounded-lg w-full'
-        />
-      </div>
-      <div className='mb-4'>
-        <label className='block text-gray-100 mb-2'>Email</label>
-        <input
-          type='email'
-          value={selectedUser.username}
-          readOnly
-          className='bg-gray-700 text-gray-100 px-3 py-2 rounded-lg w-full'
-        />
-      </div>
-      <div className='mb-4'>
-        <label className='block text-gray-100 mb-2'>Role</label>
-        <select
-          value={updatedRole}
-          onChange={(e) => setUpdatedRole(e.target.value)}
-          className='bg-gray-700 text-gray-100 px-3 py-2 rounded-lg w-full'
-        >
-          <option value='admin'>Admin</option>
-          <option value='user'>User</option>
-        </select>
-      </div>
+      {/* Edit User Modal */}
+      {isModalOpen && selectedUser && (
+        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50'>
+          <div className='bg-gray-800 p-6 rounded-lg shadow-lg w-96'>
+            {/* Modal Header with Close Button */}
+            <div className='flex justify-between items-center mb-4'>
+              <h2 className='text-xl font-semibold text-gray-100'>Edit User</h2>
+              <button
+                onClick={closeModal}
+                className='text-gray-300 hover:text-white'
+              >
+                <X size={20} /> {/* Close icon */}
+              </button>
+            </div>
 
-      {/* Modal Footer */}
-      <div className='flex justify-end'>
-        <button
-          onClick={handleDelete}
-          disabled={loading} 
-          className={`bg-red-500 hover:bg-red-700 text-white py-1 px-4 rounded mr-2
-             ${
-            loading ? 'opacity-50 cursor-not-allowed' : ''
-          }
-          `}
-        >
-          Delete
-        </button>
-        <button
-          onClick={handleSave}
-          disabled={loading}
-          className={`bg-blue-500 hover:bg-blue-700 text-white py-1 px-4 rounded ${
-            loading ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
-        >
-          Save
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+            {/* Modal Body */}
+            <div className='mb-4'>
+              <label className='block text-gray-100 mb-2'>Name</label>
+              <input
+                type='text'
+                value={selectedUser.name}
+                readOnly
+                className='bg-gray-700 text-gray-100 px-3 py-2 rounded-lg w-full'
+              />
+            </div>
+            <div className='mb-4'>
+              <label className='block text-gray-100 mb-2'>Email</label>
+              <input
+                type='email'
+                value={selectedUser.username}
+                readOnly
+                className='bg-gray-700 text-gray-100 px-3 py-2 rounded-lg w-full'
+              />
+            </div>
+            <div className='mb-4'>
+              <label className='block text-gray-100 mb-2'>Role</label>
+              <select
+                value={updatedRole}
+                onChange={(e) => setUpdatedRole(e.target.value)}
+                className='bg-gray-700 text-gray-100 px-3 py-2 rounded-lg w-full'
+              >
+                <option value='admin'>Admin</option>
+                <option value='user'>User</option>
+              </select>
+            </div>
+
+            {/* Modal Footer */}
+            <div className='flex justify-end'>
+              <button
+                onClick={handleDelete}
+                disabled={loading} 
+                className={`bg-red-500 hover:bg-red-700 text-white py-1 px-4 rounded mr-2 ${
+                  loading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                Delete
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={loading}
+                className={`bg-blue-500 hover:bg-blue-700 text-white py-1 px-4 rounded ${
+                  loading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
