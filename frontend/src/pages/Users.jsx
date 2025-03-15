@@ -18,6 +18,49 @@ const Users = () => {
     fetchUsers();
     fetchCurrentUser();
   }, []);
+  const updateUser = async (username, newRole) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3000/api/update-role', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, role: newRole }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update user role');
+      }
+
+      const updatedUser = await response.json();
+      setUsers(users.map(user => user.username === username ? { ...user, role: newRole } : user));
+    } catch (error) {
+      console.error('Error updating user role:', error);
+    }
+  };
+  const deleteUser = async (username) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3000/api/delete-user', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete user');
+      }
+
+      setUsers(users.filter(user => user.username !== username));
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -191,7 +234,7 @@ const Users = () => {
           </div>
         </div>
 
-        {loading ? <p className='text-gray-300'>Loading users...</p> : <UserTable isAdmin={isAdmin} users={filteredUsers} />}
+        {loading ? <p className='text-gray-300'>Loading users...</p> : <UserTable isAdmin={isAdmin} users={filteredUsers} updateUser={updateUser} deleteUser={deleteUser} />}
       </main>
     </div>
   );
