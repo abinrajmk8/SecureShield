@@ -1,10 +1,13 @@
 import React ,{useEffect,useState} from 'react';
 import { Edit, Eye ,X} from 'lucide-react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const UserTable = ({ users, isAdmin ,updateUser,deleteUser}) => {
 const [isModalOpen, setIsModalOpen] = useState(false);
 const [selectedUser, setSelectedUser] = useState(null);
 const [updatedRole, setUpdatedRole] = useState('');
+const [loading, setLoading] = useState(false); // Add this line
 
 // Open modal and set user data
 const handleEditClick = (user) => {
@@ -20,21 +23,38 @@ const closeModal = () => {
 };
 const handleSave = async () => {
   if (selectedUser && updatedRole) {
-    await updateUser(selectedUser.username, updatedRole);
-    closeModal();
+    setLoading(true); // Disable buttons
+    try {
+      await updateUser(selectedUser.username, updatedRole);
+      toast.success('User role updated successfully!');
+      closeModal();
+    } catch (error) {
+      toast.error('Error updating user role. Please try again.');
+    } finally {
+      setLoading(false); // Re-enable buttons
+    }
   }
 };
 
 // Handle Delete button click
 const handleDelete = async () => {
   if (selectedUser) {
-    await deleteUser(selectedUser.username);
-    closeModal();
+    setLoading(true); // Disable buttons
+    try {
+      await deleteUser(selectedUser.username);
+      toast.success('User deleted successfully!');
+      closeModal();
+    } catch (error) {
+      toast.error('Error deleting user. Please try again.');
+    } finally {
+      setLoading(false); // Re-enable buttons
+    }
   }
 };
 
   return (
     <div className='bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700'>
+      <ToastContainer autoClose={2500} />
       <div className='overflow-x-auto'>
         <table className='min-w-full bg-gray-700 text-gray-100'>
           <thead>
@@ -153,13 +173,21 @@ const handleDelete = async () => {
       <div className='flex justify-end'>
         <button
           onClick={handleDelete}
-          className='bg-red-500 hover:bg-red-700 text-white py-1 px-4 rounded mr-2'
+          disabled={loading} 
+          className={`bg-red-500 hover:bg-red-700 text-white py-1 px-4 rounded mr-2
+             ${
+            loading ? 'opacity-50 cursor-not-allowed' : ''
+          }
+          `}
         >
           Delete
         </button>
         <button
           onClick={handleSave}
-          className='bg-blue-500 hover:bg-blue-700 text-white py-1 px-4 rounded'
+          disabled={loading}
+          className={`bg-blue-500 hover:bg-blue-700 text-white py-1 px-4 rounded ${
+            loading ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
         >
           Save
         </button>

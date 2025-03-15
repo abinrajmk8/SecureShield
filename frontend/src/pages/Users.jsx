@@ -3,13 +3,15 @@ import Header from '../components/common/Header';
 import StatusCard from '../components/common/StatusCard';
 import { UserPlus, Users as UsersIcon, UserCheck, UserX, UserCog, RefreshCw } from 'lucide-react';
 import UserTable from '../components/Tables/UserTable';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [currentUser, setCurrentUser] = useState(null);
-
+  const [addUserLoading, setAddUserLoading] = useState(false); 
   const [showAddModal, setShowAddModal] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', role: 'user' });
 
@@ -115,6 +117,15 @@ const Users = () => {
     .sort((a, b) => (a.role === 'admin' ? -1 : 1));
 
     const handleAddUser = async () => {
+      if (!newUser.name || !newUser.email || !newUser.password || !newUser.confirmPassword) {
+        toast.error('Please fill all fields.');
+        return;
+      }
+      if (newUser.password !== newUser.confirmPassword) {
+        toast.error('Passwords do not match.', { autoClose: 500 });
+        return;
+      }
+      setAddUserLoading(true);
       try {
         const res = await fetch('http://localhost:3000/api/register', { // 🔥 Use correct route
           method: 'POST',
@@ -134,12 +145,17 @@ const Users = () => {
     
         const data = await res.json();
         console.log('User registered successfully:', data);
+        toast.success('User added successfully!', { autoClose: 1500 });
     
         setShowAddModal(false);
         setNewUser({ name: '', username: '', password: '', role: 'user' }); // Reset fields
         fetchUsers(); // Refresh user list
       } catch (error) {
         console.error('Error registering user:', error);
+        toast.error(error.message || 'Failed to add user. Please try again.', { autoClose: 2000 });
+      }
+      finally {
+        setAddUserLoading(false); // Re-enable Add button
       }
     };
     
@@ -147,6 +163,13 @@ const Users = () => {
 
   return (
     <div className='flex-1 overflow-auto relative z-10'>
+     <ToastContainer
+  autoClose={2500} // Auto-close after 2.5 seconds
+  closeButton={true} // Show close button
+  closeOnClick={true} // Allow closing by clicking the toast
+  pauseOnHover={true} // Pause auto-close on hover
+  draggable={true} // Allow dragging to dismiss
+/>
       <Header title='User Management' />
       <main className='max-w-7xl mx-auto py-6 px-4 lg:px-8'>
       {showAddModal && (
@@ -191,7 +214,15 @@ const Users = () => {
       </select>
       <div className='flex justify-end'>
         <button onClick={() => setShowAddModal(false)} className='text-gray-300 hover:text-white mr-3'>Cancel</button>
-        <button onClick={handleAddUser} className='bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded'>Add</button>
+        <button 
+        onClick={handleAddUser}
+        disabled={addUserLoading} // Disable button when loading
+        className={`bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded
+        ${
+        addUserLoading ? 'opacity-50 cursor-not-allowed' : ''
+        }`}>
+          {addUserLoading ? 'Adding...' : 'Add'} 
+        </button>
       </div>
     </div>
   </div>
