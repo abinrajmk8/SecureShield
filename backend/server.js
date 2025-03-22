@@ -11,6 +11,7 @@ import testRoute from "./HelperRoutes/testRoute.js";
 import updateUser from "./HelperRoutes/updateUser.js";
 import deleteUser from "./HelperRoutes/deleteUser.js";
 import portscanRouter from "./HelperRoutes/portScan.js";
+import sendMail from "./HelperRoutes/sendMail.js";
 
 dotenv.config();
 
@@ -36,6 +37,8 @@ app.use(SecurityReportRouter);
 app.use("/api/devices", deviceRoutes);
 app.use(portscanRouter);
 
+//send mail 
+app.use("/api",sendMail);
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
