@@ -43,7 +43,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="flex-1 overflow-auto relative z-10 bg-[#0d1117] text-[#c9d1d9] min-h-screen">
+    <div className="flex-1 overflow-auto relative z-10 bg-[#0d1117] text-[#c9d1d9] min-h-screen scrollbar-hide">
       <Header title="Settings" />
       <main className="max-w-4xl mx-auto py-6 px-4 lg:px-8">
         <Card title="User Information" className="mb-6 bg-[#161b22] border border-[#30363d]">
