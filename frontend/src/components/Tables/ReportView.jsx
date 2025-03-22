@@ -74,8 +74,10 @@ const ReportView = ({ report, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-gray-900 p-8 rounded-xl shadow-xl w-4/5 max-w-5xl">
+<div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+  <div className="bg-gray-900 p-8 rounded-xl shadow-xl w-4/5 max-w-5xl">
+
+
         <h2 className="text-3xl font-bold text-gray-100 mb-6">Report Details</h2>
 
         {/* Report Details */}

@@ -5,7 +5,7 @@ import FilterSidebar from '../FilterSidebar';
 
 const ReportTable = ({ reports, loading, isAdmin, setReports }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [editedSeverity, setEditedSeverity] = useState(''); 
+  const [editedSeverity, setEditedSeverity] = useState('');
   const [selectedReport, setSelectedReport] = useState(null);
   const [filters, setFilters] = useState({
     type: '',
@@ -15,13 +15,15 @@ const ReportTable = ({ reports, loading, isAdmin, setReports }) => {
   });
   const [showFilters, setShowFilters] = useState(false);
   const [showDownloadOptions, setShowDownloadOptions] = useState(false);
-  const [editingReport, setEditingReport] = useState(null); // Track which report is being edited
-  const [editedStatus, setEditedStatus] = useState(''); // Edited status value
+  const [editingReport, setEditingReport] = useState(null);
+  const [editedStatus, setEditedStatus] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 15;
 
   const isWithinTimeRange = (timestamp, filterValue) => {
     const reportDate = new Date(timestamp);
     const now = new Date();
-  
+
     if (filterValue === "Last 24 Hours") {
       return reportDate >= new Date(now.getTime() - 24 * 60 * 60 * 1000);
     }
@@ -32,22 +34,20 @@ const ReportTable = ({ reports, loading, isAdmin, setReports }) => {
       return reportDate >= new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }
     if (filterValue === "Last 6 Months") {
-      return reportDate >= new Date(now.getTime() - 6 * 30 * 24 * 60 * 60 * 1000); // Approximate 6 months
+      return reportDate >= new Date(now.getTime() - 6 * 30 * 24 * 60 * 60 * 1000);
     }
     if (filterValue === "This Year") {
       return reportDate.getFullYear() === now.getFullYear();
     }
-  
-    return true; // Default case: No filter applied
-  };
-  
 
-// Filter reports based on search query and filters
-const filteredReports = reports
+    return true;
+  };
+
+  const filteredReports = reports
   .filter(report =>
-    (report.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     report.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  )
+    report.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    report.description.toLowerCase().includes(searchQuery.toLowerCase())
+  ) 
   .filter(report =>
     (filters.type === '' || report.type === filters.type) &&
     (filters.severity === '' || report.severity === filters.severity) &&
@@ -56,9 +56,19 @@ const filteredReports = reports
   );
 
 
-  // Handle download all reports as PDF
+  const indexOfLastReport = currentPage * rowsPerPage;
+  const indexOfFirstReport = indexOfLastReport - rowsPerPage;
+  const currentReports = filteredReports.slice(indexOfFirstReport, indexOfLastReport);
+
+  const totalPages = Math.ceil(filteredReports.length / rowsPerPage);
+
+  const handleFirstPage = () => setCurrentPage(1);
+  const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const handleNextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  const handleLastPage = () => setCurrentPage(totalPages);
+
   const handleDownloadAll = (format) => {
-    setShowDownloadOptions(false); // Close the dropdown
+    setShowDownloadOptions(false);
     if (format === 'brief') {
       alert('Brief download functionality will be implemented here.');
     } else if (format === 'detailed') {
@@ -66,14 +76,12 @@ const filteredReports = reports
     }
   };
 
-  // Handle editing a report
   const handleEdit = (report) => {
     setEditingReport(report);
     setEditedStatus(report.status);
     setEditedSeverity(report.severity);
   };
 
-  // Save edited changes
   const handleSave = async () => {
     try {
       const response = await fetch(`http://localhost:3000/api/securityreports/${editingReport._id}`, {
@@ -82,19 +90,18 @@ const filteredReports = reports
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          status: editedStatus, 
+          status: editedStatus,
           severity: editedSeverity,
         }),
       });
 
       if (!response.ok) throw new Error('Failed to update report');
 
-      // Update the local state
       const updatedReports = reports.map(report =>
         report._id === editingReport._id ? { ...report, status: editedStatus, severity: editedSeverity } : report
       );
-      setReports(updatedReports); // Update the reports state
-      setEditingReport(null); // Close the edit popup
+      setReports(updatedReports);
+      setEditingReport(null);
     } catch (error) {
       console.error('Error updating report:', error);
     }
@@ -176,14 +183,14 @@ const filteredReports = reports
               <tr>
                 <td colSpan='6' className='py-4 text-center text-gray-300'>Loading reports...</td>
               </tr>
-            ) : filteredReports.length === 0 ? (
+            ) : currentReports.length === 0 ? (
               <tr>
                 <td colSpan='6' className='py-4 text-center text-gray-300'>No reports found.</td>
               </tr>
             ) : (
-              filteredReports.map((report, index) => (
+              currentReports.map((report, index) => (
                 <tr key={report._id} className='hover:bg-gray-600'>
-                  <td className='py-2 px-4 border-b border-gray-600 border-r text-center'>{index + 1}</td>
+                  <td className='py-2 px-4 border-b border-gray-600 border-r text-center'>{indexOfFirstReport + index + 1}</td>
                   <td className='py-2 px-4 border-b border-gray-600 border-r text-center'>{report.type}</td>
                   <td className={`py-2 px-4 border-b border-gray-600 border-r text-center ${
                     report.severity === 'Critical' ? 'text-red-500' :
@@ -230,6 +237,41 @@ const filteredReports = reports
         </table>
       </div>
 
+      {/* Pagination Controls */}
+      <div className='flex justify-center items-center mt-4'>
+        <button
+          onClick={handleFirstPage}
+          disabled={currentPage === 1}
+          className='bg-gray-700 hover:bg-gray-600 text-white font-bold py-1 px-4 rounded-l'
+        >
+          First
+        </button>
+        <button
+          onClick={handlePrevPage}
+          disabled={currentPage === 1}
+          className='bg-gray-700 hover:bg-gray-600 text-white font-bold py-1 px-4'
+        >
+          Prev
+        </button>
+        <span className='mx-4 text-gray-100'>
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+          className='bg-gray-700 hover:bg-gray-600 text-white font-bold py-1 px-4'
+        >
+          Next
+        </button>
+        <button
+          onClick={handleLastPage}
+          disabled={currentPage === totalPages}
+          className='bg-gray-700 hover:bg-gray-600 text-white font-bold py-1 px-4 rounded-r'
+        >
+          Last
+        </button>
+      </div>
+
       {/* Report View Popup */}
       {selectedReport && (
         <ReportView report={selectedReport} onClose={() => setSelectedReport(null)} isAdmin={isAdmin} />
@@ -237,64 +279,55 @@ const filteredReports = reports
 
       {/* Edit Report Popup */}
       {editingReport && (
-      <div className='fixed inset-0 flex justify-center bg-black bg-opacity-50'>
-    <div className='bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md max-h-[450px] overflow-y-auto mt-10'>
-      <h2 className='text-xl font-semibold text-gray-100 mb-4'>Edit Report</h2>
-      <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-        
-        {/* Status Selection */}
-        <div className='mb-4'>
-          <label className='block text-gray-100 mb-2'>Status</label>
-          <select
-            value={editedStatus}
-            onChange={(e) => setEditedStatus(e.target.value)}
-            className='bg-gray-700 text-gray-100 px-3 py-2 rounded-lg w-full'
-          >
-            <option value='Unresolved'>Unresolved</option>
-            <option value='Pending'>Pending</option>
-            <option value='Investigating'>Investigating</option>
-            <option value='Resolved'>Resolved</option>
-          </select>
+        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
+          <div className='bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto'>
+            <h2 className='text-xl font-semibold text-gray-100 mb-4'>Edit Report</h2>
+            <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+              <div className='mb-4'>
+                <label className='block text-gray-100 mb-2'>Status</label>
+                <select
+                  value={editedStatus}
+                  onChange={(e) => setEditedStatus(e.target.value)}
+                  className='bg-gray-700 text-gray-100 px-3 py-2 rounded-lg w-full'
+                >
+                  <option value='Unresolved'>Unresolved</option>
+                  <option value='Pending'>Pending</option>
+                  <option value='Investigating'>Investigating</option>
+                  <option value='Resolved'>Resolved</option>
+                </select>
+              </div>
+              <div className='mb-4'>
+                <label className='block text-gray-100 mb-2'>Severity</label>
+                <select
+                  value={editedSeverity}
+                  onChange={(e) => setEditedSeverity(e.target.value)}
+                  className='bg-gray-700 text-gray-100 px-3 py-2 rounded-lg w-full'
+                >
+                  <option value='Low'>Low</option>
+                  <option value='Medium'>Medium</option>
+                  <option value='High'>High</option>
+                  <option value='Critical'>Critical</option>
+                </select>
+              </div>
+              <div className='flex justify-end'>
+                <button
+                  type="button"
+                  onClick={() => setEditingReport(null)}
+                  className='bg-red-500 hover:bg-red-700 text-white py-1 px-4 rounded mr-2'
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className='bg-blue-500 hover:bg-blue-700 text-white py-1 px-4 rounded'
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-
-        {/* Severity Selection */}
-        <div className='mb-4'>
-          <label className='block text-gray-100 mb-2'>Severity</label>
-                  <select
-          value={editedSeverity}
-          onChange={(e) => setEditedSeverity(e.target.value)}
-          className='bg-gray-700 text-gray-100 px-3 py-2 rounded-lg w-full'
-        >
-          <option value='Low'>Low</option>
-          <option value='Medium'>Medium</option>
-          <option value='High'>High</option>
-          <option value='Critical'>Critical</option>
-        </select>
-
-        </div>
-
-        <div className='flex justify-end'>
-          <button
-            type="button"
-            onClick={() => setEditingReport(null)}
-            className='bg-red-500 hover:bg-red-700 text-white py-1 px-4 rounded mr-2'
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className='bg-blue-500 hover:bg-blue-700 text-white py-1 px-4 rounded'
-          >
-            Save Changes
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-)}
-
-
-
+      )}
     </div>
   );
 };
