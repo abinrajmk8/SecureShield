@@ -7,7 +7,7 @@ const filterOptions = [
   { label: "Today", icon: "T" },
   { label: "This Week", icon: "W" },
   { label: "This Month", icon: "M" },
-  { label: "Last 2 Months", icon: "Y" },
+  { label: "This Year", icon: "Y" },
 ];
 
 const customOptions = Array.from({ length: 10 }, (_, i) => ({

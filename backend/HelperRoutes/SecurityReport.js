@@ -20,7 +20,7 @@ router.get('/api/securityreports/:id', async (req, res) => {
   }
 });
 
-// POST request to create a new SecurityReport
+
 // POST request to create a new SecurityReport
 router.post('/api/securityreports', async (req, res) => {
     // Log the request body for debugging
@@ -152,5 +152,21 @@ router.get('/api/securityreports', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// Bulk insert multiple security reports
+router.post('/api/securityreports/bulk', async (req, res) => {
+  try {
+    if (!Array.isArray(req.body) || req.body.length === 0) {
+      return res.status(400).json({ message: "Invalid input: Expected an array of reports." });
+    }
+
+    const newReports = await SecurityReport.insertMany(req.body);
+    res.status(201).json({ message: "Reports inserted successfully", reports: newReports });
+  } catch (err) {
+    console.error('Error inserting multiple security reports:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 export default router;

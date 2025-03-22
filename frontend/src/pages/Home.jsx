@@ -53,10 +53,8 @@ const Home = () => {
           return reportDate >= oneWeekAgo;
         case 'This Month':
           return reportDate.getMonth() === now.getMonth() && reportDate.getFullYear() === now.getFullYear();
-        case 'Last 2 Months':
-          const twoMonthsAgo = new Date();
-          twoMonthsAgo.setMonth(now.getMonth() - 2);
-          return reportDate >= twoMonthsAgo;
+        case 'This Year':
+          return reportDate.getFullYear() === now.getFullYear();
         default:
           return true;
       }
@@ -106,9 +104,9 @@ const Home = () => {
 
         {/* Charts */}
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
-          <VulnerabilityChart reports={filteredReports} />
+          <VulnerabilityChart reports={reports} />
           <AlertChart reports={filteredReports} />
-          <ThreatCharts reports={filteredReports} />
+          <ThreatCharts reports={reports} />
         </div>
 
       </main>

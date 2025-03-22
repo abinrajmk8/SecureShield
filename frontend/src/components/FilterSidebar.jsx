@@ -66,18 +66,21 @@ const FilterSidebar = ({ filters, setFilters, onClose }) => {
         <option value="Resolved">Resolved</option>
       </select>
 
-      {/* Time Filter */}
-      <label className="block text-sm text-gray-300 mt-4 mb-1">Time Period</label>
-      <select
-        className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-        value={localFilters.time}
-        onChange={(e) => handleFilterChange("time", e.target.value)}
-      >
-        <option value="">All</option>
+            {/* Time Filter */}
+            <label className="block text-sm text-gray-300 mt-4 mb-1">Time Period</label>
+            <select
+            value={localFilters.time}  // ✅ Use localFilters instead of filters
+            onChange={(e) => handleFilterChange("time", e.target.value)}  // ✅ Use handleFilterChange for local state
+            className="bg-gray-700 text-gray-100 px-3 py-2 rounded-lg w-full"
+            >
+        <option value="">All Time</option>
         <option value="Last 24 Hours">Last 24 Hours</option>
         <option value="Last 7 Days">Last 7 Days</option>
         <option value="Last 30 Days">Last 30 Days</option>
+        <option value="Last 6 Months">Last 6 Months</option>
+        <option value="This Year">This Year</option>
       </select>
+
 
       {/* Buttons */}
       <div className="mt-6 flex justify-between">
