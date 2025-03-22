@@ -1,11 +1,51 @@
-import React from 'react';
+import React,{useRef} from 'react';
 import { Download, Mail } from 'lucide-react';
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
+import autoTable from 'jspdf-autotable';
+
 
 const ReportView = ({ report, onClose }) => {
+
+  
   // Function to handle download as PDF
   const handleDownload = () => {
-    alert('Download as PDF functionality will be implemented here.');
+    const doc = new jsPDF(); // Create a new PDF document
+  
+    // Add Report Title
+    doc.setFontSize(18);
+    doc.text("Report Details", 14, 20);
+  
+    // Prepare Report Data as an Array
+    const reportData = [
+      ["Type", report.type],
+      ["Severity", report.severity],
+      ["Status", report.status],
+      ["Timestamp", new Date(report.timestamp).toLocaleString()],
+      ["Description", report.description],
+      ["Detected By", report.detectedBy],
+      ["Recommendation", report.recommendation],
+      ["Device Priority", report.devicePriority],
+      ["MAC Address", report.macAddress || "N/A"],
+      ["Device Name", report.deviceName || "N/A"],
+      ["Open Ports", report.ports?.join(", ") || "N/A"],
+    ];
+  
+    // Call autoTable correctly
+    autoTable(doc, {
+      startY: 30, // Position the table below the title
+      head: [["Field", "Value"]], // Table header
+      body: reportData, // Table content
+      styles: { fontSize: 10, cellPadding: 3 }, // Adjust font size & padding
+      theme: "grid", // Makes table more readable
+    });
+  
+    // Save the PDF
+    doc.save("report.pdf");
   };
+  
+  
+
 
   // Function to handle send mail
   const handleSendMail = () => {
