@@ -1,3 +1,4 @@
+// frontend/src/pages/Users.jsx
 import React, { useEffect, useState } from 'react';
 import Header from '../components/common/Header';
 import StatusCard from '../components/common/StatusCard';
@@ -14,6 +15,7 @@ const Users = () => {
   const [addUserLoading, setAddUserLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newUser, setNewUser] = useState({ 
+    
     name: '', 
     email: '', 
     password: '', 

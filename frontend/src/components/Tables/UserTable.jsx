@@ -1,49 +1,67 @@
+// frontend/src/components/Tables/UserTable.jsx
+
 import React, { useState } from 'react';
 import { Edit, Eye, X } from 'lucide-react';
+import UserView from './UserView'; // Import the UserView component
 
-const UserTable = ({ users, isAdmin, updateUser, deleteUser, toast }) => { // Add `toast` as a prop
-  const [isModalOpen, setIsModalOpen] = useState(false);
+const UserTable = ({ users, isAdmin, updateUser, deleteUser, toast }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false); // State for edit modal
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false); // State for view modal
   const [selectedUser, setSelectedUser] = useState(null);
   const [updatedRole, setUpdatedRole] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Open modal and set user data
+  // Open edit modal and set user data
   const handleEditClick = (user) => {
     setSelectedUser(user);
     setUpdatedRole(user.role);
     setIsModalOpen(true);
   };
 
-  // Close modal
+  // Open view modal and set user data
+  const handleViewClick = (user) => {
+    setSelectedUser(user);
+    setIsViewModalOpen(true);
+  };
+
+  // Close edit modal
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedUser(null);
   };
 
+  // Close view modal
+  const closeViewModal = () => {
+    setIsViewModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  // Save updated user role
   const handleSave = async () => {
     if (selectedUser && updatedRole) {
       setLoading(true); // Disable buttons
       try {
         await updateUser(selectedUser.username, updatedRole);
-        toast.success('User role updated successfully!'); // Use the `toast` prop
+        toast.success('User role updated successfully!');
         closeModal();
       } catch (error) {
-        toast.error('Error updating user role. Please try again.'); // Use the `toast` prop
+        toast.error('Error updating user role. Please try again.');
       } finally {
         setLoading(false); // Re-enable buttons
       }
     }
   };
 
+  // Delete user
   const handleDelete = async () => {
     if (selectedUser) {
       setLoading(true); // Disable buttons
       try {
         await deleteUser(selectedUser.username);
-        toast.success('User deleted successfully!'); // Use the `toast` prop
+        toast.success('User deleted successfully!');
         closeModal();
       } catch (error) {
-        toast.error('Error deleting user. Please try again.'); // Use the `toast` prop
+        toast.error('Error deleting user. Please try again.');
       } finally {
         setLoading(false); // Re-enable buttons
       }
@@ -92,6 +110,7 @@ const UserTable = ({ users, isAdmin, updateUser, deleteUser, toast }) => { // Ad
                       <button
                         className='bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded'
                         title='View'
+                        onClick={() => handleViewClick(user)}
                       >
                         <Eye size={16} />
                       </button>
@@ -171,7 +190,7 @@ const UserTable = ({ users, isAdmin, updateUser, deleteUser, toast }) => { // Ad
             <div className='flex justify-end'>
               <button
                 onClick={handleDelete}
-                disabled={loading} 
+                disabled={loading}
                 className={`bg-red-500 hover:bg-red-700 text-white py-1 px-4 rounded mr-2 ${
                   loading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
@@ -190,6 +209,11 @@ const UserTable = ({ users, isAdmin, updateUser, deleteUser, toast }) => { // Ad
             </div>
           </div>
         </div>
+      )}
+
+      {/* View User Modal */}
+      {isViewModalOpen && selectedUser && (
+        <UserView selectedUser={selectedUser} closeModal={closeViewModal} />
       )}
     </div>
   );

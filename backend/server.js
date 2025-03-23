@@ -14,6 +14,7 @@ import portscanRouter from "./HelperRoutes/portScan.js";
 import sendMail from "./HelperRoutes/sendMail.js";
 import settingsRoutes from "./HelperRoutes/settings.js";
 import generateAnalysis from "./HelperRoutes/generateAnalysis.js";
+import UserAttributes from "./HelperRoutes/userAttributesRoutes.js";
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.use("/api",authRoutes);
 app.use("/api", userRoutes);
 app.use("/api", currentUser);
 app.use("/api",updateUser);
+app.use("api/userAttributes", UserAttributes);
 app.use("/api",deleteUser);
 
 // network operations

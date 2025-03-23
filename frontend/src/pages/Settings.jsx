@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from '../components/common/Header';
 import Toggle from '../components/common/Toggle';
 import Card from '../components/common/Card';
@@ -13,8 +13,12 @@ const Settings = ({ handleLogout }) => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
-  const [editName, setEditName] = useState(false); // Toggle for editing name
-  const [name, setName] = useState(''); // State for user's name
+  const [editName, setEditName] = useState(false);
+  const [name, setName] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
+
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -25,13 +29,45 @@ const Settings = ({ handleLogout }) => {
         if (!response.ok) throw new Error('Failed to fetch user data');
         const userData = await response.json();
         setCurrentUser(userData);
-        setName(userData.name); // Set the user's name
+        setName(userData.name);
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
     };
+
+    const fetchArpSpoofDetector = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/settings', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        if (!response.ok) throw new Error('Failed to fetch ARP Spoof Detector setting');
+        const data = await response.json();
+        setArpSpoofDetector(data.arpspoofedetector);
+      } catch (error) {
+        console.error('Error fetching ARP Spoof Detector setting:', error);
+      }
+    };
+
+    const fetchUserAttributes = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/api/userAttributes/${currentUser?.username}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        if (!response.ok) throw new Error('Failed to fetch user attributes');
+        const data = await response.json();
+        setProfilePhoto(data.profilePhoto || null);
+        setNotificationsEnabled(data.notificationsEnabled);
+      } catch (error) {
+        console.error('Error fetching user attributes:', error);
+      }
+    };
+
     fetchCurrentUser();
-  }, []);
+    fetchArpSpoofDetector();
+    if (currentUser?.username) {
+      fetchUserAttributes();
+    }
+  }, [currentUser?.username]);
 
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
@@ -71,14 +107,78 @@ const Settings = ({ handleLogout }) => {
       });
       if (!response.ok) throw new Error('Failed to update name');
       alert('Name updated successfully!');
-      setEditName(false); // Close edit mode
+      setEditName(false);
     } catch (error) {
       console.error('Name update error:', error);
       alert('Error updating name.');
     }
   };
 
-  // Function to generate initials
+  const handleUpdateArpSpoofDetector = async (newValue) => {
+    try {
+      const response = await fetch('http://localhost:3000/api/settings/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ arpspoofedetector: newValue }),
+      });
+      if (!response.ok) throw new Error('Failed to update ARP Spoof Detector');
+      setArpSpoofDetector(newValue);
+      console.log('ARP Spoof Detector updated successfully!');
+    } catch (error) {
+      console.error('ARP Spoof Detector update error:', error);
+      alert('Error updating ARP Spoof Detector.');
+    }
+  };
+
+  const handleProfilePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Photo = reader.result;
+        setProfilePhoto(base64Photo);
+        updateUserAttributes({ profilePhoto: base64Photo }); // Update profile photo in the backend
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleNotificationsToggle = async (newValue) => {
+    setNotificationsEnabled(newValue);
+    await updateUserAttributes({ notificationsEnabled: newValue }); // Update notifications setting in the backend
+  };
+
+  const updateUserAttributes = async (updates) => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/userAttributes/${currentUser.username}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(updates),
+      });
+      if (!response.ok) throw new Error('Failed to update user attributes');
+      const data = await response.json();
+      console.log('User attributes updated:', data);
+    } catch (error) {
+      console.error('Error updating user attributes:', error);
+    }
+  };
+
+  const handleProfilePhotoClick = () => {
+    if (profilePhoto || currentUser?.avatar) {
+      setIsPhotoViewerOpen(true); // Open the photo viewer
+    }
+  };
+
+  const handleUpdateProfilePhotoClick = () => {
+    fileInputRef.current.click(); // Programmatically trigger the file input
+  };
+
   const getInitials = (name) => {
     if (!name) return '';
     const names = name.split(' ');
@@ -97,17 +197,20 @@ const Settings = ({ handleLogout }) => {
         <div className="col-span-1 bg-gray-800 p-4 rounded-lg border border-[#30363d]">
           {currentUser && (
             <div className="flex flex-col items-center space-y-4">
-              {currentUser.avatar ? (
-                <img
-                  src={currentUser.avatar}
-                  alt="Profile"
-                  className="w-24 h-24 rounded-full border border-[#30363d]"
-                />
-              ) : (
-                <div className="w-24 h-24 rounded-full border border-[#30363d] flex items-center justify-center bg-blue-500 text-white text-2xl font-semibold">
-                  {getInitials(currentUser.name)}
-                </div>
-              )}
+              <div
+                className="w-24 h-24 rounded-full border border-[#30363d] flex items-center justify-center bg-blue-500 text-white text-2xl font-semibold cursor-pointer"
+                onClick={handleProfilePhotoClick}
+              >
+                {profilePhoto || currentUser.avatar ? (
+                  <img
+                    src={profilePhoto || currentUser.avatar}
+                    alt="Profile"
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                ) : (
+                  getInitials(currentUser.name)
+                )}
+              </div>
               <div className="text-center">
                 {editName ? (
                   <div className="flex items-center space-x-2">
@@ -133,7 +236,19 @@ const Settings = ({ handleLogout }) => {
                 )}
                 <p className="text-sm text-gray-400">@{currentUser.username}</p>
               </div>
-              <Button className="bg-[#238636] hover:bg-[#2ea043] w-full">View Profile</Button>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePhotoUpload}
+                className="hidden"
+                ref={fileInputRef}
+              />
+              <Button
+                onClick={handleUpdateProfilePhotoClick}
+                className="bg-[#238636] hover:bg-[#2ea043] w-full cursor-pointer"
+              >
+                Update Profile Photo
+              </Button>
             </div>
           )}
         </div>
@@ -143,7 +258,7 @@ const Settings = ({ handleLogout }) => {
           <Card title="Account" className="p-6 rounded-lg bg-[#161b22] border border-[#30363d]">
             <div className="flex justify-between items-center">
               <p>Your email</p>
-              <p className="text-gray-400">{currentUser?.email}</p> {/* Display email as plain text */}
+              <p className="text-gray-400">{currentUser?.username}</p>
             </div>
           </Card>
 
@@ -153,8 +268,8 @@ const Settings = ({ handleLogout }) => {
               <div className="relative">
                 <Toggle
                   isOn={arpSpoofDetector}
-                  handleToggle={() => setArpSpoofDetector(!arpSpoofDetector)}
-                  disabled={currentUser?.role !== 'admin'} // Disable toggle if not admin
+                  handleToggle={() => handleUpdateArpSpoofDetector(!arpSpoofDetector)}
+                  disabled={currentUser?.role !== 'admin'}
                 />
                 {currentUser?.role !== 'admin' && (
                   <div className="absolute -top-8 left-0 bg-[#30363d] text-white text-sm px-2 py-1 rounded opacity-0 hover:opacity-100 transition-opacity">
@@ -168,7 +283,10 @@ const Settings = ({ handleLogout }) => {
           <Card title="Notifications" className="p-6 rounded-lg bg-gray-800 border border-[#30363d]">
             <div className="flex justify-between items-center">
               <p>Enable Notifications</p>
-              <Toggle isOn={notificationsEnabled} handleToggle={() => setNotificationsEnabled(!notificationsEnabled)} />
+              <Toggle
+                isOn={notificationsEnabled}
+                handleToggle={() => handleNotificationsToggle(!notificationsEnabled)}
+              />
             </div>
           </Card>
 
@@ -189,6 +307,22 @@ const Settings = ({ handleLogout }) => {
           </Card>
         </div>
       </main>
+
+      {/* Photo Viewer Modal */}
+      {isPhotoViewerOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+          onClick={() => setIsPhotoViewerOpen(false)}
+        >
+          <div className="bg-gray-800 p-4 rounded-lg max-w-lg">
+            <img
+              src={profilePhoto || currentUser?.avatar}
+              alt="Profile"
+              className="w-full h-full rounded-lg"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
