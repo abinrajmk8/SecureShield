@@ -5,6 +5,7 @@ import Card from '../components/common/Card';
 import Input from '../components/common/Input';
 import Button from '../components/common/Button';
 import { User, Shield, Bell, Lock, LogOut, Edit } from 'lucide-react';
+import imageCompression from 'browser-image-compression'; // Import image compression library
 
 const Settings = ({ handleLogout }) => {
   const [arpSpoofDetector, setArpSpoofDetector] = useState(false);
@@ -30,6 +31,16 @@ const Settings = ({ handleLogout }) => {
         const userData = await response.json();
         setCurrentUser(userData);
         setName(userData.name);
+        setNotificationsEnabled(userData.notificationsEnabled);
+
+        // Fetch the user's profile photo
+        const photoResponse = await fetch('http://localhost:3000/api/get-photo', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        if (photoResponse.ok) {
+          const photoData = await photoResponse.json();
+          setProfilePhoto(photoData.profilePhoto || null);
+        }
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -48,26 +59,9 @@ const Settings = ({ handleLogout }) => {
       }
     };
 
-    const fetchUserAttributes = async () => {
-      try {
-        const response = await fetch(`http://localhost:3000/api/userAttributes/${currentUser?.username}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        });
-        if (!response.ok) throw new Error('Failed to fetch user attributes');
-        const data = await response.json();
-        setProfilePhoto(data.profilePhoto || null);
-        setNotificationsEnabled(data.notificationsEnabled);
-      } catch (error) {
-        console.error('Error fetching user attributes:', error);
-      }
-    };
-
     fetchCurrentUser();
     fetchArpSpoofDetector();
-    if (currentUser?.username) {
-      fetchUserAttributes();
-    }
-  }, [currentUser?.username]);
+  }, []);
 
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
@@ -136,24 +130,65 @@ const Settings = ({ handleLogout }) => {
   const handleProfilePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64Photo = reader.result;
-        setProfilePhoto(base64Photo);
-        updateUserAttributes({ profilePhoto: base64Photo }); // Update profile photo in the backend
+      const options = {
+        maxSizeMB: 0.5, // Compress to 0.5 MB
+        maxWidthOrHeight: 1024, // Resize to 1024px width or height
+        useWebWorker: true, // Use web worker for faster compression
+        initialQuality: 0.8, // Reduce quality to 80% to further reduce size
       };
-      reader.readAsDataURL(file);
+  
+      try {
+        // Compress the image
+        const compressedFile = await imageCompression(file, options);
+  
+        // Convert the compressed image to Base64
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const base64Photo = reader.result; // Base64 string of the compressed image
+  
+          // Update the profile photo in the backend
+          try {
+            const response = await fetch('http://localhost:3000/api/update-photo', {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+              },
+              body: JSON.stringify({ profilePhoto: base64Photo }),
+            });
+  
+            if (!response.ok) {
+              throw new Error('Failed to update profile photo');
+            }
+  
+            const data = await response.json();
+            console.log('Profile photo updated:', data);
+  
+            // Update the profile photo in the state
+            setProfilePhoto(base64Photo);
+            alert('Profile photo updated successfully!');
+          } catch (error) {
+            console.error('Error updating profile photo:', error);
+            alert('Failed to update profile photo. Please try again.');
+          }
+        };
+  
+        reader.readAsDataURL(compressedFile);
+      } catch (error) {
+        console.error('Error compressing image:', error);
+        alert('Failed to compress the image. Please try again with a smaller file.');
+      }
     }
   };
 
   const handleNotificationsToggle = async (newValue) => {
     setNotificationsEnabled(newValue);
-    await updateUserAttributes({ notificationsEnabled: newValue }); // Update notifications setting in the backend
+    await updateUser({ notificationsEnabled: newValue }); // Update notifications setting in the backend
   };
 
-  const updateUserAttributes = async (updates) => {
+  const updateUser = async (updates) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/userAttributes/${currentUser.username}`, {
+      const response = await fetch('http://localhost:3000/api/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -161,11 +196,11 @@ const Settings = ({ handleLogout }) => {
         },
         body: JSON.stringify(updates),
       });
-      if (!response.ok) throw new Error('Failed to update user attributes');
+      if (!response.ok) throw new Error('Failed to update user');
       const data = await response.json();
-      console.log('User attributes updated:', data);
+      console.log('User updated:', data);
     } catch (error) {
-      console.error('Error updating user attributes:', error);
+      console.error('Error updating user:', error);
     }
   };
 
@@ -201,9 +236,9 @@ const Settings = ({ handleLogout }) => {
                 className="w-24 h-24 rounded-full border border-[#30363d] flex items-center justify-center bg-blue-500 text-white text-2xl font-semibold cursor-pointer"
                 onClick={handleProfilePhotoClick}
               >
-                {profilePhoto || currentUser.avatar ? (
+                {profilePhoto ? (
                   <img
-                    src={profilePhoto || currentUser.avatar}
+                    src={profilePhoto}
                     alt="Profile"
                     className="w-full h-full rounded-full object-cover"
                   />
@@ -316,7 +351,7 @@ const Settings = ({ handleLogout }) => {
         >
           <div className="bg-gray-800 p-4 rounded-lg max-w-lg">
             <img
-              src={profilePhoto || currentUser?.avatar}
+              src={profilePhoto}
               alt="Profile"
               className="w-full h-full rounded-lg"
             />

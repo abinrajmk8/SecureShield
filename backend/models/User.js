@@ -5,41 +5,49 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
-    default: "Guest User"  // Set default name
+    default: "Guest User", // Set default name
   },
   username: {
     type: String,
     required: true,
     unique: true,
-    trim: true
+    trim: true,
   },
   password: {
     type: String,
-    required: true // Hashed password
+    required: true, // Hashed password
   },
   companyId: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
   },
   role: {
     type: String,
     enum: ['admin', 'user'], // Only admin and user roles
-    default: 'user'
+    default: 'user',
   },
   lastLogin: {
     type: Date, // Stores last login timestamp
-    default: null
+    default: null,
   },
   lastLogout: {
     type: Date, // Stores last logout timestamp
-    default: null
+    default: null,
   },
   activeStatus: {
     type: String,
     enum: ['online', 'offline'], // Active status options
-    default: 'offline'
-  }
+    default: 'offline',
+  },
+  profilePhoto: {
+    type: String, // Store the profile photo as a base64 string or URL
+    default: null, // Default to null
+  },
+  notificationsEnabled: {
+    type: Boolean,
+    default: true, // Notifications enabled by default
+  },
 }, { timestamps: true }); // Adds createdAt and updatedAt automatically
 
 const User = mongoose.model('User', userSchema);

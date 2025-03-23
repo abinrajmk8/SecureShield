@@ -1,11 +1,10 @@
-// /backend/HelperRoutes/currentUser.js
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
 const router = express.Router();
 
-// GET route to fetch the current user and their role 
+// GET route to fetch the current user and their role
 router.get('/currentUser', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1]; // Extract token from header

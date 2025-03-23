@@ -7,48 +7,46 @@ import authRoutes from "./HelperRoutes/authRoutes.js";
 import deviceRoutes from "./HelperRoutes/deviceRoutes.js";
 import userRoutes from "./HelperRoutes/userList.js";
 import currentUser from "./HelperRoutes/currentUser.js";
-import testRoute from "./HelperRoutes/testRoute.js";
 import updateUser from "./HelperRoutes/updateUser.js";
 import deleteUser from "./HelperRoutes/deleteUser.js";
 import portscanRouter from "./HelperRoutes/portScan.js";
 import sendMail from "./HelperRoutes/sendMail.js";
 import settingsRoutes from "./HelperRoutes/settings.js";
 import generateAnalysis from "./HelperRoutes/generateAnalysis.js";
-import UserAttributes from "./HelperRoutes/userAttributesRoutes.js";
+import UserPhoto from "./HelperRoutes/userPhoto.js";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Middleware configuration
+app.use(express.json({ limit: "10mb" }));  // Increase the payload size limit
+app.use(express.urlencoded({ limit: "10mb", extended: true }));  // Allow larger URL encoded data
+app.use(cors());  // Enable CORS for all origins
 
-app.use(express.json());
-app.use(cors());
 connectDB();
 
-app.use("/test",testRoute);
-
-//user operation routes
-app.use("/api",authRoutes);
+// User operation routes
+app.use("/api", authRoutes);
 app.use("/api", userRoutes);
 app.use("/api", currentUser);
-app.use("/api",updateUser);
-app.use("api/userAttributes", UserAttributes);
-app.use("/api",deleteUser);
+app.use("/api", updateUser);
+app.use("/api", deleteUser);
+app.use("/api", UserPhoto);
 
-// network operations
+// Network operations
 app.use(SecurityReportRouter);
 app.use("/api/devices", deviceRoutes);
 app.use(portscanRouter);
 app.use("/api/settings", settingsRoutes);
 
-//send mail 
-app.use("/api",sendMail);
+// Send mail
+app.use("/api", sendMail);
 
-//AI analysis 
+// AI analysis
 app.use("/api/generate-analysis", generateAnalysis);
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
 });
-
