@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Search, Eye, Download, Filter, ChevronDown } from 'lucide-react';
 import ReportView from './ReportView';
 import FilterSidebar from '../FilterSidebar';
+import 'jspdf-autotable';
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const ReportTable = ({ reports, loading, isAdmin, setReports }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,14 +72,79 @@ const ReportTable = ({ reports, loading, isAdmin, setReports }) => {
   const handleNextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   const handleLastPage = () => setCurrentPage(totalPages);
 
-  const handleDownloadAll = (format) => {
-    setShowDownloadOptions(false);
-    if (format === 'brief') {
-      alert('Brief download functionality will be implemented here.');
-    } else if (format === 'detailed') {
-      alert('Detailed download functionality will be implemented here.');
+
+  
+
+  
+  const handleDownloadAll = (reports) => {
+    if (!reports || reports.length === 0) {
+      alert("No reports available to download.");
+      return;
     }
+  
+    const doc = new jsPDF({ orientation: "landscape" }); // Use landscape for better width
+    doc.setFontSize(18);
+    doc.text("Network Security Reports", 14, 15);
+  
+    const tableData = reports.map((report, index) => [
+      index + 1,
+      report.type,
+      report.severity,
+      report.status,
+      new Date(report.timestamp).toLocaleString(),
+      report.detectedBy,
+      report.devicePriority,
+      report.macAddress || "N/A",
+      report.deviceName || "N/A",
+      report.ports?.join(", ") || "N/A",
+    ]);
+  
+    autoTable(doc, {
+      startY: 25,
+      head: [
+        [
+          "#",
+          "Type",
+          "Severity",
+          "Status",
+          "Timestamp",
+          "Detected By",
+          "Device Priority",
+          "MAC Address",
+          "Device Name",
+          "Open Ports",
+        ],
+      ],
+      body: tableData,
+      styles: { fontSize: 10, cellPadding: 3, overflow: "linebreak" }, // Wrap long text
+      columnStyles: {
+        0: { cellWidth: 10 }, // #
+        1: { cellWidth: 30 }, // Type
+        2: { cellWidth: 20 }, // Severity
+        3: { cellWidth: 25 }, // Status
+        4: { cellWidth: 40 }, // Timestamp
+        5: { cellWidth: 35 }, // Detected By
+        6: { cellWidth: 25 }, // Device Priority
+        7: { cellWidth: 40 }, // MAC Address
+        8: { cellWidth: 40 }, // Device Name
+        9: { cellWidth: 30 }, // Open Ports
+      },
+      theme: "grid",
+      didDrawPage: (data) => {
+        doc.setFontSize(10);
+        doc.text(
+          `Page ${doc.internal.getNumberOfPages()}`,
+          data.settings.margin.left,
+          doc.internal.pageSize.height - 10
+        );
+      },
+    });
+  
+    doc.save("Network_Security_Reports.pdf");
   };
+  
+  
+  
 
   const handleEdit = (report) => {
     setEditingReport(report);
@@ -130,31 +198,14 @@ const ReportTable = ({ reports, loading, isAdmin, setReports }) => {
           >
             <Filter className='mr-2' size={16} /> Filters
           </button>
-          <div className='relative'>
-            <button
-              onClick={() => setShowDownloadOptions(!showDownloadOptions)}
-              className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center'
-            >
-              <Download className='mr-2' size={16} /> Download All
-              <ChevronDown className='ml-2' size={16} />
-            </button>
-            {showDownloadOptions && (
-              <div className='absolute right-0 mt-2 w-48 bg-gray-700 rounded-lg shadow-lg z-50'>
-                <button
-                  onClick={() => handleDownloadAll('brief')}
-                  className='w-full px-4 py-2 text-gray-100 hover:bg-gray-600 rounded-t-lg'
-                >
-                  Brief Report
-                </button>
-                <button
-                  onClick={() => handleDownloadAll('detailed')}
-                  className='w-full px-4 py-2 text-gray-100 hover:bg-gray-600 rounded-b-lg'
-                >
-                  Detailed Report
-                </button>
-              </div>
-            )}
-          </div>
+          <button
+            onClick={() => handleDownloadAll(reports)}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center"
+          >
+          <Download className="mr-2" size={16} /> Download All
+        </button>
+
+
         </div>
       </div>
 
