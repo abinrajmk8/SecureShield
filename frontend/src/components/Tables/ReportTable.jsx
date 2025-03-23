@@ -47,13 +47,15 @@ const ReportTable = ({ reports, loading, isAdmin, setReports }) => {
   .filter(report =>
     report.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
     report.description.toLowerCase().includes(searchQuery.toLowerCase())
-  ) 
+  )
   .filter(report =>
     (filters.type === '' || report.type === filters.type) &&
     (filters.severity === '' || report.severity === filters.severity) &&
     (filters.status === '' || report.status === filters.status) &&
     (filters.time === '' || isWithinTimeRange(report.timestamp, filters.time))
-  );
+  )
+  .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Sorting by most recent
+
 
 
   const indexOfLastReport = currentPage * rowsPerPage;

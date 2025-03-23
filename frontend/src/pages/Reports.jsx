@@ -4,15 +4,17 @@ import StatusCard from "../components/common/StatusCard";
 import { FileText, ShieldAlert, CheckCircle, Clock } from "lucide-react";
 import ReportTable from "../components/Tables/ReportTable";
 import ReportView from "../components/Tables/ReportView";
+import Ai from '../components/Ai';
+import { Bot } from "lucide-react";
 
 const Reports = () => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [editingReport, setEditingReport] = useState(null); // State for editing report
-  const [selectedReport, setSelectedReport] = useState(null); // State for viewing report
+  const [editingReport, setEditingReport] = useState(null);
+  const [selectedReport, setSelectedReport] = useState(null); 
+  const [isAiOpen, setIsAiOpen] = useState(false);
 
-  // Fetch reports and user role (existing code)
   useEffect(() => {
     const fetchReports = async () => {
       try {
@@ -55,7 +57,6 @@ const Reports = () => {
     fetchCurrentUser();
   }, []);
 
-  // Calculate status card values (existing code)
   const totalReports = reports.length;
   const criticalIssues = reports.filter(report => report.severity === 'Critical').length;
   const resolvedReports = reports.filter(report => report.status === 'Resolved').length;
@@ -68,21 +69,19 @@ const Reports = () => {
     { title: "Pending Investigations", value: pendingInvestigations.toString(), color: "yellow", icon: Clock },
   ];
 
-  // Handle edit report
   const handleEdit = (report, event) => {
-    const rowRect = event.currentTarget.closest('tr').getBoundingClientRect(); // Get row position
+    const rowRect = event.currentTarget.closest('tr').getBoundingClientRect();
     setEditingReport({
       ...report,
-      position: { x: rowRect.left + window.scrollX, y: rowRect.top + window.scrollY }, // Store row position
+      position: { x: rowRect.left + window.scrollX, y: rowRect.top + window.scrollY },
     });
   };
 
-  // Handle view report
   const handleView = (report, event) => {
-    const rowRect = event.currentTarget.closest('tr').getBoundingClientRect(); // Get row position
+    const rowRect = event.currentTarget.closest('tr').getBoundingClientRect();
     setSelectedReport({
       ...report,
-      position: { x: rowRect.left + window.scrollX, y: rowRect.top + window.scrollY }, // Store row position
+      position: { x: rowRect.left + window.scrollX, y: rowRect.top + window.scrollY },
     });
   };
 
@@ -101,45 +100,42 @@ const Reports = () => {
             />
           ))}
         </div>
+        
         <ReportTable
           reports={reports}
           loading={loading}
           isAdmin={isAdmin}
           setReports={setReports}
-          onEdit={handleEdit} // Pass handleEdit to ReportTable
-          onView={handleView} // Pass handleView to ReportTable
+          onEdit={handleEdit}
+          onView={handleView}
         />
       </main>
 
       {/* Edit Report Popup */}
       {editingReport && (
-        <div
-          className='fixed inset-0 bg-black bg-opacity-50 z-50'
-          onClick={() => setEditingReport(null)}
-        >
-          <div
-            className='absolute bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto'
-            style={{
-              top: editingReport.position.y,
-              left: editingReport.position.x,
-              transform: 'translateY(-50%)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className='fixed inset-0 bg-black bg-opacity-50 z-50' onClick={() => setEditingReport(null)}>
+          <div className='absolute bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto'
+            style={{ top: editingReport.position.y, left: editingReport.position.x, transform: 'translateY(-50%)' }}
+            onClick={(e) => e.stopPropagation()}>
             <h2 className='text-xl font-semibold text-gray-100 mb-4'>Edit Report</h2>
-            {/* Edit Report Form */}
           </div>
         </div>
       )}
 
       {/* Report View Popup */}
       {selectedReport && (
-        <ReportView
-          report={selectedReport}
-          onClose={() => setSelectedReport(null)}
-          position={selectedReport.position}
-        />
+        <ReportView report={selectedReport} onClose={() => setSelectedReport(null)} position={selectedReport.position} />
       )}
+
+{/* AI Analysis Docker */}
+<button
+  onClick={() => setIsAiOpen(true)}
+  className="fixed right-4 top-1/2 transform -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg shadow-lg z-50 flex items-center justify-center"
+>
+  <Bot size={22} />
+</button>
+
+<Ai isOpen={isAiOpen} onClose={() => setIsAiOpen(false)} reports={reports} />
     </div>
   );
 };

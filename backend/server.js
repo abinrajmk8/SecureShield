@@ -13,6 +13,7 @@ import deleteUser from "./HelperRoutes/deleteUser.js";
 import portscanRouter from "./HelperRoutes/portScan.js";
 import sendMail from "./HelperRoutes/sendMail.js";
 import settingsRoutes from "./HelperRoutes/settings.js";
+import generateAnalysis from "./HelperRoutes/generateAnalysis.js";
 
 dotenv.config();
 
@@ -41,6 +42,9 @@ app.use("/api/settings", settingsRoutes);
 
 //send mail 
 app.use("/api",sendMail);
+
+//AI analysis 
+app.use("/api/generate-analysis", generateAnalysis);
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
