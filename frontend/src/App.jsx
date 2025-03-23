@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Route, Routes, Navigate } from 'react-router-dom';
+import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Sidebar from './components/Sidebar';
@@ -12,6 +12,7 @@ import Reports from './pages/Reports';
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate(); // Initialize navigation
 
   // Check for token on app load
   useEffect(() => {
@@ -21,58 +22,63 @@ const App = () => {
 
   const handleLogin = (token, username) => {
     localStorage.setItem('token', token);
-    localStorage.setItem('username', username); // Store username
+    localStorage.setItem('username', username);
     setIsLoggedIn(true);
   };
 
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem('token');
-      const username = localStorage.getItem('username'); // Retrieve username
+      const username = localStorage.getItem('username');
 
-      if (!token || !username) return;
+      if (!token || !username) {
+        setIsLoggedIn(false);
+        navigate('/'); // Redirect to login page
+        return;
+      }
 
-      // Send logout request with username
-      await fetch('http://localhost:3000/api/logout', {
+      // Send logout request
+      const response = await fetch('http://localhost:3000/api/logout', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username }) // Send username
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username }),
       });
+
+      if (!response.ok) throw new Error('Logout failed');
 
       console.log(`User ${username} logged out`);
 
-      // Clear token and username from local storage
+      // Clear local storage and update state
       localStorage.removeItem('token');
       localStorage.removeItem('username');
       setIsLoggedIn(false);
+      navigate('/'); // Redirect to login page
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error('Logout error:', error);
     }
   };
 
   return (
     <div className="flex h-screen bg-gray-900 text-gray-100 overflow-hidden">
       <ToastContainer
-        autoClose={2500} // Auto-close after 2.5 seconds
-        closeButton={true} // Show close button
-        closeOnClick={true} // Allow closing by clicking the toast
-        pauseOnHover={true} // Pause auto-close on hover
-        draggable={true} // Allow dragging to dismiss
+        autoClose={2500}
+        closeButton={true}
+        closeOnClick={true}
+        pauseOnHover={true}
+        draggable={true}
       />
       {isLoggedIn && <Sidebar handleLogout={handleLogout} />}
       <Routes>
         {!isLoggedIn ? (
           <>
             <Route path="/" element={<LoginPage handleLogin={handleLogin} />} />
-            <Route path="*" element={<Navigate to="/" replace />} /> {/* Always redirect to login */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </>
         ) : (
           <>
             <Route path="/Home" element={<Home />} />
             <Route path="/Users" element={<Users />} />
-            <Route path="/Settings" element={<Settings />} />
+            <Route path="/Settings" element={<Settings handleLogout={handleLogout} />} />
             <Route path="/Network" element={<Network />} />
             <Route path="/Reports" element={<Reports />} />
             <Route path="*" element={<Navigate to="/Home" replace />} />

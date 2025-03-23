@@ -12,6 +12,7 @@ import updateUser from "./HelperRoutes/updateUser.js";
 import deleteUser from "./HelperRoutes/deleteUser.js";
 import portscanRouter from "./HelperRoutes/portScan.js";
 import sendMail from "./HelperRoutes/sendMail.js";
+import settingsRoutes from "./HelperRoutes/settings.js";
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use("/api",deleteUser);
 app.use(SecurityReportRouter);
 app.use("/api/devices", deviceRoutes);
 app.use(portscanRouter);
+app.use("/api/settings", settingsRoutes);
 
 //send mail 
 app.use("/api",sendMail);

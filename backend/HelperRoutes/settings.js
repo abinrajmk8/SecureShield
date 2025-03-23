@@ -33,6 +33,42 @@ const Settings = ({ handleLogout }) => {
     fetchCurrentUser();
   }, []);
 
+  // Fetch ARP Spoof Detector value on page load
+  useEffect(() => {
+    const fetchArpSpoofDetector = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/settings', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        if (!response.ok) throw new Error('Failed to fetch ARP Spoof Detector value');
+        const data = await response.json();
+        setArpSpoofDetector(data.arpspoofedetector);
+      } catch (error) {
+        console.error('Error fetching ARP Spoof Detector value:', error);
+      }
+    };
+    fetchArpSpoofDetector();
+  }, []);
+
+  // Update ARP Spoof Detector value
+  const handleArpSpoofDetectorToggle = async () => {
+    const newValue = !arpSpoofDetector;
+    try {
+      const response = await fetch('http://localhost:3000/api/settings/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ arpspoofedetector: newValue }),
+      });
+      if (!response.ok) throw new Error('Failed to update ARP Spoof Detector value');
+      setArpSpoofDetector(newValue);
+    } catch (error) {
+      console.error('Error updating ARP Spoof Detector value:', error);
+    }
+  };
+
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
@@ -153,7 +189,7 @@ const Settings = ({ handleLogout }) => {
               <div className="relative">
                 <Toggle
                   isOn={arpSpoofDetector}
-                  handleToggle={() => setArpSpoofDetector(!arpSpoofDetector)}
+                  handleToggle={handleArpSpoofDetectorToggle}
                   disabled={currentUser?.role !== 'admin'} // Disable toggle if not admin
                 />
                 {currentUser?.role !== 'admin' && (

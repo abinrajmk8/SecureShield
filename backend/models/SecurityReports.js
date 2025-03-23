@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const SecurityReportSchema = new mongoose.Schema({
   timestamp: { type: Date, required: true, default: Date.now },
-  type: { type: String, required: true }, // e.g., "ARP Spoofing", "Open Port Found"
+  type: { type: String, required: true }, // e.g., "ARP Spoofing", "Open Port Found", unknown devices , suspicious traffic, unknown admin flagged
   severity: { type: String, required: true, enum: ["Critical", "High", "Medium", "Low"] },
   status: { type: String, required: true, enum: ["Unresolved", "Pending", "Investigating", "Resolved"] },
   description: { type: String, required: true }, // Detailed explanation
