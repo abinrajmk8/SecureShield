@@ -21,7 +21,7 @@ def log_alert(src_ip, real_mac, spoofed_mac):
     alert_data = {
         "timestamp": datetime.utcnow(),
         "alert_type": "ARP Spoofing",
-        "severity": "critical",
+        "severity": "high",
         "message": "Possible ARP Spoofing detected!",
         "source_ip": src_ip,
         "expected_mac": real_mac,
