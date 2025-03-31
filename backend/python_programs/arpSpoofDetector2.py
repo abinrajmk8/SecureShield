@@ -7,6 +7,10 @@ import logging
 import signal
 import threading
 import platform
+from interface_fetcher import get_active_interface
+
+# Interface configuration (at top for easy change)
+interface = get_active_interface() or "Intel(R) Wireless-AC 9560 160MHz"  # Dynamic fetch with hardcoded fallback
 
 # MongoDB Connection
 MONGO_URI = "mongodb+srv://miniproject07s:G16PObcPYM3KeqYs@network.k0ddo.mongodb.net/?retryWrites=true&w=majority&appName=networkc"
@@ -28,21 +32,34 @@ def signal_handler(sig, frame):
     global sniffer, running
     logging.info("[+] Received SIGTERM, stopping detector...")
     running = False
+    stop_sniffer()
+    close_mongodb()
+    sys.exit(0)
+
+# Register signal handler
+signal.signal(signal.SIGTERM, signal_handler)
+
+# Helper to stop sniffer safely
+def stop_sniffer():
+    global sniffer
     if sniffer and sniffer.running:
         try:
             sniffer.stop()
             logging.info("[+] Sniffer stopped successfully")
+        except OSError as e:
+            logging.warning(f"Caught OSError while stopping sniffer (likely Npcap issue): {e}")
         except Exception as e:
             logging.error(f"Error stopping sniffer: {e}")
+        finally:
+            sniffer = None  # Ensure sniffer is cleared
+
+# Helper to close MongoDB safely
+def close_mongodb():
     try:
         client.close()
         logging.info("[+] MongoDB connection closed")
     except Exception as e:
         logging.error(f"Error closing MongoDB connection: {e}")
-    sys.exit(0)
-
-# Register signal handler
-signal.signal(signal.SIGTERM, signal_handler)
 
 def get_mac(ip):
     try:
@@ -85,10 +102,8 @@ def log_alert(src_ip, real_mac, spoofed_mac):
         count = 0
         last_log_time = current_time
     else:
-         logging.info("[+] Alert already logged, suppressing further alerts for 20 minutes.")
-         time.sleep(1200)  # 20 minutes in seconds
-        # count = 1  # Reset count after waiting (if needed)
-       # print("[+] Alert suppressed, waiting 20 minutes for next log.")
+        logging.info("[+] Alert already logged, suppressing further alerts for 20 minutes.")
+        time.sleep(1200)  # 20 minutes in seconds
 
 def process_sniffed_packet(packet):
     try:
@@ -112,11 +127,11 @@ def start_sniffing(interface):
         logging.info("[+] Running Detector ..")
         while running:
             time.sleep(1)  # Keep thread alive, checking running flag
-        if sniffer.running:
-            sniffer.stop()
     except Exception as e:
         logging.error(f"Error during sniffing: {e}")
         sys.exit(1)
+    finally:
+        stop_sniffer()  # Ensure sniffer stops even on exception
 
 def reset_count():
     global count, last_log_time
@@ -133,26 +148,28 @@ if __name__ == "__main__":
         if platform.system() == "Windows":
             scapy.conf.use_pcap = True  # Use Npcap on Windows for better compatibility
 
-        interface = "Intel(R) Wireless-AC 9560 160MHz"
+        if not interface:
+            logging.error("Failed to find a valid interface")
+            sys.exit(1)
+
         sniff_thread = threading.Thread(target=start_sniffing, args=(interface,), daemon=True)
         sniff_thread.start()
 
         threading.Thread(target=reset_count, daemon=True).start()
 
+        # Main loop to keep script alive until interrupted
         while running:
             time.sleep(1)
 
     except KeyboardInterrupt:
-        logging.info("\n[+] Detector stopped by user.")
+        logging.info("[+] Detector stopped by user")
         running = False
-        if sniffer and sniffer.running:
-            sniffer.stop()
-        client.close()
+        stop_sniffer()
+        close_mongodb()
         sys.exit(0)
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
         running = False
-        if sniffer and sniffer.running:
-            sniffer.stop()
-        client.close()
+        stop_sniffer()
+        close_mongodb()
         sys.exit(1)
