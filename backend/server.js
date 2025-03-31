@@ -10,12 +10,15 @@ import currentUser from "./HelperRoutes/currentUser.js";
 import updateUser from "./HelperRoutes/updateUser.js";
 import deleteUser from "./HelperRoutes/deleteUser.js";
 import portscanRouter from "./HelperRoutes/portScan.js";
-import sendMail from "./HelperRoutes/sendMail.js";
+import sendMailRoute from "./HelperRoutes/sendMail.js";
+import sendMail from "./utils/sendMail.js"; 
 import settingsRoutes from "./HelperRoutes/settings.js";
 import generateAnalysis from "./HelperRoutes/generateAnalysis.js";
 import UserPhoto from "./HelperRoutes/userPhoto.js";
 import { spawn } from "child_process";
 import Settings from "./models/SettingsModel.js";
+import User from "./models/User.js";
+import mongoose from "mongoose";
 
 dotenv.config();
 
@@ -38,7 +41,7 @@ app.use(SecurityReportRouter);
 app.use("/api/devices", deviceRoutes);
 app.use(portscanRouter);
 app.use("/api/settings", settingsRoutes);
-app.use("/api", sendMail);
+app.use("/api", sendMailRoute); // Keep this if the route is used elsewhere
 app.use("/api/generate-analysis", generateAnalysis);
 
 let detectorProcess = null;
@@ -66,7 +69,7 @@ const startDetector = () => {
 
     detectorProcess.on("close", (code) => {
       const exitStatus = code === null ? "terminated" : `exited with code ${code}`;
-      // console.log(`ARP Spoof Detector ${exitStatus}`);
+      console.log(`ARP Spoof Detector ${exitStatus}`);
       detectorProcess = null;
     });
 
@@ -99,6 +102,44 @@ const initializeAndManageDetector = async () => {
   }
 };
 
+// Function to send email notifications using the utility function
+const sendAttackNotifications = async (report) => {
+  try {
+    const users = await User.find({ notificationsEnabled: true });
+    if (!users.length) {
+      console.log("No users with notifications enabled");
+      return;
+    }
+
+    const subject = "Security Alert: ARP Spoofing Detected";
+    const text = `Dear ${report.detectedBy} User,\n\nAn ARP spoofing attack was detected in your network!\n\nDetails:\n- Source IP: ${report.sourceIP}\n- Expected MAC: ${report.macAddress}\n- Spoofed MAC: ${report.description.split("Spoofed MAC: ")[1]}\n- Timestamp: ${report.timestamp}\n\nRecommendation: ${report.recommendation}\n\nPlease investigate immediately.\n\nRegards,\nSecureShield Team`;
+
+    for (const user of users) {
+      try {
+        await sendMail(user.username, subject, text); // Use the utility function directly
+        console.log(`Email sent to ${user.username}`);
+      } catch (error) {
+        console.error(`Failed to send email to ${user.username}:`, error);
+      }
+    }
+  } catch (error) {
+    console.error("Error sending notifications:", error);
+  }
+};
+
+// Define SecurityReport model for change stream
+const securityReportSchema = new mongoose.Schema({
+  timestamp: Date,
+  type: String,
+  sourceIP: String,
+  macAddress: String,
+  description: String,
+  detectedBy: String,
+  recommendation: String,
+  // Other fields as needed
+});
+const SecurityReport = mongoose.models.securityreports || mongoose.model("securityreports", securityReportSchema);
+
 initializeAndManageDetector();
 
 Settings.watch().on("change", (change) => {
@@ -106,6 +147,16 @@ Settings.watch().on("change", (change) => {
     const updatedFields = change.updateDescription.updatedFields;
     if ("arpspoofedetector" in updatedFields) {
       initializeAndManageDetector();
+    }
+  }
+});
+
+// Watch for new security reports
+SecurityReport.watch().on("change", (change) => {
+  if (change.operationType === "insert") {
+    const report = change.fullDocument;
+    if (report.type === "ARP Spoofing") {
+      sendAttackNotifications(report);
     }
   }
 });
