@@ -14,62 +14,101 @@ import sendMail from "./HelperRoutes/sendMail.js";
 import settingsRoutes from "./HelperRoutes/settings.js";
 import generateAnalysis from "./HelperRoutes/generateAnalysis.js";
 import UserPhoto from "./HelperRoutes/userPhoto.js";
-import { spawn } from "child_process";  // Import child_process module
+import { spawn } from "child_process";
+import Settings from "./models/SettingsModel.js";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware configuration
-app.use(express.json({ limit: "10mb" }));  // Increase the payload size limit
-app.use(express.urlencoded({ limit: "10mb", extended: true }));  // Allow larger URL encoded data
-app.use(cors());  // Enable CORS for all origins
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
+app.use(cors());
 
 connectDB();
 
-// User operation routes
 app.use("/api", authRoutes);
 app.use("/api", userRoutes);
 app.use("/api", currentUser);
 app.use("/api", updateUser);
 app.use("/api", deleteUser);
 app.use("/api", UserPhoto);
-
-// Network operations
 app.use(SecurityReportRouter);
 app.use("/api/devices", deviceRoutes);
 app.use(portscanRouter);
 app.use("/api/settings", settingsRoutes);
-
-// Send mail
 app.use("/api", sendMail);
-
-// AI analysis
 app.use("/api/generate-analysis", generateAnalysis);
 
-// Start the ARP spoofing detector as a background process
-const runDetector = () => {
-  const detectorProcess = spawn("python", ["./python_programs/arpSpoofDetector2.py"]);  // Path to the Python script
+let detectorProcess = null;
 
-  // Log the output of the Python program to the server terminal
-  detectorProcess.stdout.on("data", (data) => {
-    console.log(`[Detector Output]: ${data}`);
-  });
+const startDetector = () => {
+  if (!detectorProcess) {
+    detectorProcess = spawn("python", ["./python_programs/arpSpoofDetector2.py"]);
+    
+    detectorProcess.stdout.on("data", (data) => {
+      console.log(`[Detector Output]: ${data}`);
+    });
 
-  // Log any errors from the Python program
-  detectorProcess.stderr.on("data", (data) => {
-    console.error(`[Detector Error]: ${data}`);
-  });
+    detectorProcess.stderr.on("data", (data) => {
+      const message = data.toString();
+      if (!message.includes("Invalid argument") && 
+          !message.includes("os.write") && 
+          !message.includes("stop_cb") && 
+          !message.includes("sniffer.stop") && 
+          !message.includes("Thread-") && 
+          !message.includes("self._target") && 
+          !message.includes("scapy")) {
+        console.error(`[Detector Error]: ${message}`);
+      }
+    });
 
-  // Log when the Python process exits
-  detectorProcess.on("close", (code) => {
-    console.log(`Detector process exited with code ${code}`);
-  });
+    detectorProcess.on("close", (code) => {
+      const exitStatus = code === null ? "terminated" : `exited with code ${code}`;
+      // console.log(`ARP Spoof Detector ${exitStatus}`);
+      detectorProcess = null;
+    });
+
+    console.log("✅ ARP Spoof Detector started");
+  }
 };
 
-// Call the function to start the detector process when the server starts
-runDetector();
+const stopDetector = () => {
+  if (detectorProcess) {
+    detectorProcess.kill('SIGTERM');
+    detectorProcess = null;
+    console.log("❌ ARP Spoof Detector stopped");
+  }
+};
+
+const initializeAndManageDetector = async () => {
+  try {
+    let settings = await Settings.findOne();
+    if (!settings) {
+      settings = await Settings.create({ arpspoofedetector: false });
+    }
+
+    if (settings.arpspoofedetector && !detectorProcess) {
+      startDetector();
+    } else if (!settings.arpspoofedetector && detectorProcess) {
+      stopDetector();
+    }
+  } catch (error) {
+    console.error("Error managing detector settings:", error);
+  }
+};
+
+initializeAndManageDetector();
+
+Settings.watch().on("change", (change) => {
+  if (change.operationType === "update") {
+    const updatedFields = change.updateDescription.updatedFields;
+    if ("arpspoofedetector" in updatedFields) {
+      initializeAndManageDetector();
+    }
+  }
+});
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);

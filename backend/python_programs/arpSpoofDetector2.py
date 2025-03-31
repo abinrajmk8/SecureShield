@@ -4,19 +4,45 @@ from datetime import datetime, timedelta
 import time
 import sys
 import logging
+import signal
+import threading
+import platform
 
 # MongoDB Connection
 MONGO_URI = "mongodb+srv://miniproject07s:G16PObcPYM3KeqYs@network.k0ddo.mongodb.net/?retryWrites=true&w=majority&appName=networkc"
 client = MongoClient(MONGO_URI)
-db = client["test"]  # Database Name
-security_report_collection = db["securityreports"]  # Collection Name for SecurityReports
+db = client["test"]
+security_report_collection = db["securityreports"]
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
 
 # Time tracking for logging alerts
 last_log_time = None
-count = 1  # Initialize the count variable
+count = 1
+sniffer = None
+running = True
+
+# Signal handler for graceful shutdown
+def signal_handler(sig, frame):
+    global sniffer, running
+    logging.info("[+] Received SIGTERM, stopping detector...")
+    running = False
+    if sniffer and sniffer.running:
+        try:
+            sniffer.stop()
+            logging.info("[+] Sniffer stopped successfully")
+        except Exception as e:
+            logging.error(f"Error stopping sniffer: {e}")
+    try:
+        client.close()
+        logging.info("[+] MongoDB connection closed")
+    except Exception as e:
+        logging.error(f"Error closing MongoDB connection: {e}")
+    sys.exit(0)
+
+# Register signal handler
+signal.signal(signal.SIGTERM, signal_handler)
 
 def get_mac(ip):
     try:
@@ -33,35 +59,36 @@ def log_alert(src_ip, real_mac, spoofed_mac):
     global last_log_time, count
     current_time = datetime.utcnow()
 
-    # If count is 1, print the message and log it to the database, then set count to 0
     if count == 1:
         alert_data = {
             "timestamp": current_time,
             "type": "ARP Spoofing",
-            "severity": "High",  # Set severity level as needed
-            "status": "Unresolved",  # Default status
+            "severity": "High",
+            "status": "Unresolved",
             "description": f"Possible ARP Spoofing detected! Source IP: {src_ip}, Expected MAC: {real_mac}, Spoofed MAC: {spoofed_mac}",
             "sourceIP": src_ip,
-            "destinationIP": None,  # ARP usually doesn't have a target IP
-            "ports": [],  # No ports involved in ARP spoofing
+            "destinationIP": None,
+            "ports": [],
             "detectedBy": "ARP Detector",
             "recommendation": "Investigate the source IP for potential malicious activity.",
-            "devicePriority": "High",  # Default priority
+            "devicePriority": "High",
             "macAddress": real_mac,
-            "deviceName": "",  # Optional field
+            "deviceName": "",
         }
 
-        # Insert the alert data into the MongoDB collection
-        security_report_collection.insert_one(alert_data)
-        logging.info("[+] Alert logged to MongoDB")
+        try:
+            security_report_collection.insert_one(alert_data)
+            logging.info("[+] Alert logged to MongoDB")
+        except Exception as e:
+            logging.error(f"Error logging to MongoDB: {e}")
 
-        # Reset the count to 0 and start the 20-minute interval timer
         count = 0
         last_log_time = current_time
-
     else:
-        # Only print the suppressed alert message once, not repeatedly
-        print("[+] Alert suppressed, waiting 20 minutes for next log.")
+         logging.info("[+] Alert already logged, suppressing further alerts for 20 minutes.")
+         time.sleep(1200)  # 20 minutes in seconds
+        # count = 1  # Reset count after waiting (if needed)
+       # print("[+] Alert suppressed, waiting 20 minutes for next log.")
 
 def process_sniffed_packet(packet):
     try:
@@ -70,7 +97,6 @@ def process_sniffed_packet(packet):
             response_mac = packet[scapy.ARP].hwsrc
 
             if real_mac and real_mac != response_mac:
-                # Print attack detection message only once
                 if count == 1:
                     print("[+] You are Under Attack...!!!!!")
                     print(f"    [Expected MAC] {real_mac}  |  [Spoofed MAC] {response_mac}")
@@ -78,40 +104,55 @@ def process_sniffed_packet(packet):
     except Exception as e:
         logging.error(f"Error processing packet: {e}")
 
-def sniff(interface):
+def start_sniffing(interface):
+    global sniffer, running
     try:
-        scapy.sniff(iface=interface, store=False, prn=process_sniffed_packet)
-    except KeyboardInterrupt:
-        logging.info("\n[+] Sniffing interrupted by user. Exiting...")
-        sys.exit(0)
+        sniffer = scapy.AsyncSniffer(iface=interface, store=False, prn=process_sniffed_packet)
+        sniffer.start()
+        logging.info("[+] Running Detector ..")
+        while running:
+            time.sleep(1)  # Keep thread alive, checking running flag
+        if sniffer.running:
+            sniffer.stop()
     except Exception as e:
         logging.error(f"Error during sniffing: {e}")
         sys.exit(1)
 
-# Reset the count after 20 minutes to allow new alerts
 def reset_count():
     global count, last_log_time
-    while True:
+    while running:
         current_time = datetime.utcnow()
         if last_log_time and current_time - last_log_time >= timedelta(minutes=20):
-            count = 1  # Reset the count after 20 minutes
+            count = 1
             logging.info("[+] 20 minutes passed. Count reset to 1.")
             last_log_time = current_time
-        time.sleep(60)  # Check every minute
+        time.sleep(60)
 
 if __name__ == "__main__":
     try:
-        logging.info("[+] Running Detector .. ")
-        # Start sniffing (Replace with actual network interface name)
-        sniff("Intel(R) Wireless-AC 9560 160MHz")
+        if platform.system() == "Windows":
+            scapy.conf.use_pcap = True  # Use Npcap on Windows for better compatibility
 
-        # Start a separate thread to reset count after 20 minutes
-        import threading
+        interface = "Intel(R) Wireless-AC 9560 160MHz"
+        sniff_thread = threading.Thread(target=start_sniffing, args=(interface,), daemon=True)
+        sniff_thread.start()
+
         threading.Thread(target=reset_count, daemon=True).start()
+
+        while running:
+            time.sleep(1)
 
     except KeyboardInterrupt:
         logging.info("\n[+] Detector stopped by user.")
+        running = False
+        if sniffer and sniffer.running:
+            sniffer.stop()
+        client.close()
         sys.exit(0)
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
+        running = False
+        if sniffer and sniffer.running:
+            sniffer.stop()
+        client.close()
         sys.exit(1)

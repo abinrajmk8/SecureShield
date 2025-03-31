@@ -8,6 +8,8 @@ const settingsSchema = new mongoose.Schema({
   },
 });
 
-const Settings = mongoose.model("settings", settingsSchema);
+const Settings = mongoose.models.settings || mongoose.model("settings", settingsSchema);
+
+
 
 export default Settings;
