@@ -1,5 +1,6 @@
 import scapy.all as scapy
 from scapy.layers import http
+from interface_fetcher import get_active_interface
 
 # Function to sniff packets
 def sniff(interface):
@@ -33,4 +34,4 @@ def process_sniffed_packet(packet):
             print("\n\n[+] Possible Login Info: ", login_info)
 
 # Replace with the correct network interface name
-sniff("Intel(R) Wireless-AC 9560 160MHz")
+sniff(get_active_interface())
