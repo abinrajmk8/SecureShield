@@ -7,8 +7,8 @@ import logging
 # Disable Scapy warnings
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
-target_ip = "192.168.29.85"
-gateway_ip = "192.168.29.1"
+target_ip = "192.168.20.5"
+gateway_ip = "192.168.20.1"
 
 def get_mac(ip):
     try:

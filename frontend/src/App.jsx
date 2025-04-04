@@ -1,3 +1,4 @@
+// App.jsx
 import React, { useState, useEffect } from 'react';
 import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
@@ -9,12 +10,13 @@ import Settings from './pages/Settings';
 import Network from './pages/Network';
 import LoginPage from './pages/LoginPage';
 import Reports from './pages/Reports';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword'; // Add this import
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const navigate = useNavigate(); // Initialize navigation
+  const navigate = useNavigate();
 
-  // Check for token on app load
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) setIsLoggedIn(true);
@@ -33,11 +35,10 @@ const App = () => {
 
       if (!token || !username) {
         setIsLoggedIn(false);
-        navigate('/'); // Redirect to login page
+        navigate('/');
         return;
       }
 
-      // Send logout request
       const response = await fetch('http://localhost:3000/api/logout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -47,12 +48,10 @@ const App = () => {
       if (!response.ok) throw new Error('Logout failed');
 
       console.log(`User ${username} logged out`);
-
-      // Clear local storage and update state
       localStorage.removeItem('token');
       localStorage.removeItem('username');
       setIsLoggedIn(false);
-      navigate('/'); // Redirect to login page
+      navigate('/');
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -72,6 +71,8 @@ const App = () => {
         {!isLoggedIn ? (
           <>
             <Route path="/" element={<LoginPage handleLogin={handleLogin} />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </>
         ) : (

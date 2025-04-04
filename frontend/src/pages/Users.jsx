@@ -31,7 +31,7 @@ const Users = () => {
   const updateUser = async (username, newRole) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/update-role', {
+      const response = await fetch('http://localhost:5173/api/update-role', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

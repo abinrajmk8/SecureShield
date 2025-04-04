@@ -12,6 +12,7 @@
   "description": "",
   "dependencies": {
     "@google/generative-ai": "^0.24.0",
+    "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
     "child_process": "^1.0.2",
     "cors": "^2.8.5",

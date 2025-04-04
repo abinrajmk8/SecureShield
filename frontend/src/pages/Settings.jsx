@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/common/Header';
 import Toggle from '../components/common/Toggle';
 import Card from '../components/common/Card';
 import Input from '../components/common/Input';
 import Button from '../components/common/Button';
-import { User, Shield, Bell, Lock, LogOut, Edit } from 'lucide-react';
-import imageCompression from 'browser-image-compression'; // Import image compression library
+import { Shield, Bell, Lock, LogOut, Edit } from 'lucide-react';
 
 const Settings = ({ handleLogout }) => {
   const [arpSpoofDetector, setArpSpoofDetector] = useState(false);
@@ -16,10 +15,6 @@ const Settings = ({ handleLogout }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [editName, setEditName] = useState(false);
   const [name, setName] = useState('');
-  const [profilePhoto, setProfilePhoto] = useState(null);
-  const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
-
-  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -32,15 +27,6 @@ const Settings = ({ handleLogout }) => {
         setCurrentUser(userData);
         setName(userData.name);
         setNotificationsEnabled(userData.notificationsEnabled);
-
-        // Fetch the user's profile photo
-        const photoResponse = await fetch('http://localhost:3000/api/get-photo', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        });
-        if (photoResponse.ok) {
-          const photoData = await photoResponse.json();
-          setProfilePhoto(photoData.profilePhoto || null);
-        }
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -127,63 +113,9 @@ const Settings = ({ handleLogout }) => {
     }
   };
 
-  const handleProfilePhotoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const options = {
-        maxSizeMB: 0.5, // Compress to 0.5 MB
-        maxWidthOrHeight: 1024, // Resize to 1024px width or height
-        useWebWorker: true, // Use web worker for faster compression
-        initialQuality: 0.8, // Reduce quality to 80% to further reduce size
-      };
-  
-      try {
-        // Compress the image
-        const compressedFile = await imageCompression(file, options);
-  
-        // Convert the compressed image to Base64
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          const base64Photo = reader.result; // Base64 string of the compressed image
-  
-          // Update the profile photo in the backend
-          try {
-            const response = await fetch('http://localhost:3000/api/update-photo', {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
-              },
-              body: JSON.stringify({ profilePhoto: base64Photo }),
-            });
-  
-            if (!response.ok) {
-              throw new Error('Failed to update profile photo');
-            }
-  
-            const data = await response.json();
-            console.log('Profile photo updated:', data);
-  
-            // Update the profile photo in the state
-            setProfilePhoto(base64Photo);
-            alert('Profile photo updated successfully!');
-          } catch (error) {
-            console.error('Error updating profile photo:', error);
-            alert('Failed to update profile photo. Please try again.');
-          }
-        };
-  
-        reader.readAsDataURL(compressedFile);
-      } catch (error) {
-        console.error('Error compressing image:', error);
-        alert('Failed to compress the image. Please try again with a smaller file.');
-      }
-    }
-  };
-
   const handleNotificationsToggle = async (newValue) => {
     setNotificationsEnabled(newValue);
-    await updateUser({ notificationsEnabled: newValue }); // Update notifications setting in the backend
+    await updateUser({ notificationsEnabled: newValue });
   };
 
   const updateUser = async (updates) => {
@@ -204,56 +136,23 @@ const Settings = ({ handleLogout }) => {
     }
   };
 
-  const handleProfilePhotoClick = () => {
-    if (profilePhoto || currentUser?.avatar) {
-      setIsPhotoViewerOpen(true); // Open the photo viewer
-    }
-  };
-
-  const handleUpdateProfilePhotoClick = () => {
-    fileInputRef.current.click(); // Programmatically trigger the file input
-  };
-
-  const getInitials = (name) => {
-    if (!name) return '';
-    const names = name.split(' ');
-    if (names.length === 1) {
-      return names[0].substring(0, 2).toUpperCase();
-    } else {
-      return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
-    }
-  };
-
   return (
     <div className="flex-1 overflow-auto bg-gray-850 text-[#c9d1d9] min-h-screen">
       <Header title="Settings" />
-      <main className="max-w-5xl mx-auto py-8 px-6 lg:px-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Profile Section */}
-        <div className="col-span-1 bg-gray-800 p-4 rounded-lg border border-[#30363d]">
+      <main className="max-w-4xl mx-auto py-8 px-6 lg:px-12 space-y-6">
+        {/* Account Section */}
+        <Card title="Account" className="p-6 rounded-lg bg-[#161b22] border border-[#30363d]">
           {currentUser && (
-            <div className="flex flex-col items-center space-y-4">
-              <div
-                className="w-24 h-24 rounded-full border border-[#30363d] flex items-center justify-center bg-blue-500 text-white text-2xl font-semibold cursor-pointer"
-                onClick={handleProfilePhotoClick}
-              >
-                {profilePhoto ? (
-                  <img
-                    src={profilePhoto}
-                    alt="Profile"
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  getInitials(currentUser.name)
-                )}
-              </div>
-              <div className="text-center">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <p className="text-lg">Name</p>
                 {editName ? (
                   <div className="flex items-center space-x-2">
                     <Input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-32"
+                      className="w-48"
                     />
                     <Button onClick={handleUpdateName} className="bg-[#238636] hover:bg-[#2ea043]">
                       Save
@@ -261,7 +160,7 @@ const Settings = ({ handleLogout }) => {
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
-                    <p className="text-lg font-semibold">{name}</p>
+                    <p className="text-lg font-bold text-blue-400">{name}</p>
                     <Edit
                       className="text-blue-500 cursor-pointer"
                       size={16}
@@ -269,95 +168,86 @@ const Settings = ({ handleLogout }) => {
                     />
                   </div>
                 )}
-                <p className="text-sm text-gray-400">@{currentUser.username}</p>
               </div>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleProfilePhotoUpload}
-                className="hidden"
-                ref={fileInputRef}
-              />
-              <Button
-                onClick={handleUpdateProfilePhotoClick}
-                className="bg-[#238636] hover:bg-[#2ea043] w-full cursor-pointer"
-              >
-                Update Profile Photo
-              </Button>
+              <div className="flex justify-between items-center">
+                <p>Your email</p>
+                <p className="text-gray-400">{currentUser?.username}</p>
+              </div>
             </div>
           )}
-        </div>
+        </Card>
 
-        {/* Settings Section */}
-        <div className="col-span-2 space-y-6">
-          <Card title="Account" className="p-6 rounded-lg bg-[#161b22] border border-[#30363d]">
-            <div className="flex justify-between items-center">
-              <p>Your email</p>
-              <p className="text-gray-400">{currentUser?.username}</p>
-            </div>
-          </Card>
-
-          <Card title="Security" className="p-6 rounded-lg bg-[#161b22] border border-[#30363d]">
-            <div className="flex justify-between items-center">
-              <p>Enable ARP Spoof Detector</p>
-              <div className="relative">
-                <Toggle
-                  isOn={arpSpoofDetector}
-                  handleToggle={() => handleUpdateArpSpoofDetector(!arpSpoofDetector)}
-                  disabled={currentUser?.role !== 'admin'}
-                />
-                {currentUser?.role !== 'admin' && (
-                  <div className="absolute -top-8 left-0 bg-[#30363d] text-white text-sm px-2 py-1 rounded opacity-0 hover:opacity-100 transition-opacity">
-                    Only admin can enable this setting
-                  </div>
-                )}
-              </div>
-            </div>
-          </Card>
-
-          <Card title="Notifications" className="p-6 rounded-lg bg-gray-800 border border-[#30363d]">
-            <div className="flex justify-between items-center">
-              <p>Enable Notifications</p>
+        {/* Security Section */}
+        <Card title="Security" className="p-6 rounded-lg bg-[#161b22] border border-[#30363d]">
+          <div className="flex justify-between items-center">
+            <p>Enable ARP Spoof Detector</p>
+            <div className="relative">
               <Toggle
-                isOn={notificationsEnabled}
-                handleToggle={() => handleNotificationsToggle(!notificationsEnabled)}
+                isOn={arpSpoofDetector}
+                handleToggle={() => handleUpdateArpSpoofDetector(!arpSpoofDetector)}
+                disabled={currentUser?.role !== 'admin'}
               />
+              {currentUser?.role !== 'admin' && (
+                <div className="absolute -top-8 left-0 bg-[#30363d] text-white text-sm px-2 py-1 rounded opacity-0 hover:opacity-100 transition-opacity">
+                  Only admin can enable this setting
+                </div>
+              )}
             </div>
-          </Card>
+          </div>
+        </Card>
 
-          <Card title="Update Password" className="p-6 rounded-lg bg-[#161b22] border border-[#30363d]">
-            <form onSubmit={handleUpdatePassword} className="space-y-4">
-              <Input type="password" label="Current Password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
-              <Input type="password" label="New Password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
-              <Input type="password" label="Confirm New Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
-              <Button type="submit" className="w-full bg-[#238636] hover:bg-[#2ea043]">Update Password</Button>
-            </form>
-          </Card>
-
-          <Card className="p-6 rounded-lg bg-[#161b22] border border-[#30363d]">
-            <Button onClick={handleLogout} className="w-full bg-red-600 hover:bg-red-700 flex items-center justify-center space-x-2">
-              <LogOut size={24} />
-              <span>Logout</span>
-            </Button>
-          </Card>
-        </div>
-      </main>
-
-      {/* Photo Viewer Modal */}
-      {isPhotoViewerOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
-          onClick={() => setIsPhotoViewerOpen(false)}
-        >
-          <div className="bg-gray-800 p-4 rounded-lg max-w-lg">
-            <img
-              src={profilePhoto}
-              alt="Profile"
-              className="w-full h-full rounded-lg"
+        {/* Notifications Section */}
+        <Card title="Notifications" className="p-6 rounded-lg bg-[#161b22] border border-[#30363d]">
+          <div className="flex justify-between items-center">
+            <p>Enable Notifications</p>
+            <Toggle
+              isOn={notificationsEnabled}
+              handleToggle={() => handleNotificationsToggle(!notificationsEnabled)}
             />
           </div>
-        </div>
-      )}
+        </Card>
+
+        {/* Update Password Section */}
+        <Card title="Update Password" className="p-6 rounded-lg bg-[#161b22] border border-[#30363d]">
+          <form onSubmit={handleUpdatePassword} className="space-y-4">
+            <Input
+              type="password"
+              label="Current Password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              required
+            />
+            <Input
+              type="password"
+              label="New Password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+            />
+            <Input
+              type="password"
+              label="Confirm New Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+            <Button type="submit" className="w-full bg-[#238636] hover:bg-[#2ea043]">
+              Update Password
+            </Button>
+          </form>
+        </Card>
+
+        {/* Logout Section */}
+        <Card className="p-6 rounded-lg bg-[#161b22] border border-[#30363d]">
+          <Button
+            onClick={handleLogout}
+            className="w-full bg-red-600 hover:bg-red-700 flex items-center justify-center space-x-2"
+          >
+            <LogOut size={24} />
+            <span>Logout</span>
+          </Button>
+        </Card>
+      </main>
     </div>
   );
 };
