@@ -5,7 +5,7 @@ import User from '../models/User.js';
 
 const router = express.Router();
 
-// **User updates their own details (name/password/profilePhoto/notificationsEnabled)**
+
 router.put('/update', async (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
