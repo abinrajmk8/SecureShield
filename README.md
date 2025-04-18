@@ -334,7 +334,8 @@ curl -X POST http://localhost:3000/api/register -H "Content-Type: application/js
   - Enter username and password
   - Option to recover forgotten passwords
   - Redirects to dashboard upon successful login
-- **Image Placeholder**: `![Login Page](images/login_page.png)`
+- **Image Placeholder**: <img src="images/login_page.png" alt="Login Page" width="600"/>
+
 
 ### Dashboard
 
