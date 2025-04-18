@@ -334,7 +334,7 @@ curl -X POST http://localhost:3000/api/register -H "Content-Type: application/js
   - Enter username and password
   - Option to recover forgotten passwords
   - Redirects to dashboard upon successful login
-- **Image Placeholder**: <img src="images/login_page.png" alt="Login Page" width="600"/>
+ <img src="images/login_page.png" alt="Login Page" width="600"/>
 
 
 ### Dashboard
@@ -343,7 +343,8 @@ curl -X POST http://localhost:3000/api/register -H "Content-Type: application/js
 - **Features**:
   - Quick access to network scanning, reports, and settings
   - Displays recent activity and system status
-- **Image Placeholder**: `![Dashboard](images/dashboard.png)`
+<img src="images/dashboard.png" alt="Dashboard" width="600"/>
+
 
 ### Network Page
 
@@ -352,7 +353,8 @@ curl -X POST http://localhost:3000/api/register -H "Content-Type: application/js
   - Scan local network for devices (IP/MAC addresses)
   - Perform port scans to identify open ports and services
   - Filter devices by status or type
-- **Image Placeholder**: `![Network Page](images/network.png)`
+<img src="images/network.png" alt="Network Page" width="600"/>
+
 
 ### Report Page
 
@@ -361,7 +363,8 @@ curl -X POST http://localhost:3000/api/register -H "Content-Type: application/js
   - Generate detailed reports from scan results
   - Filter reports by severity or status
   - Export reports in PDF/CSV formats
-- **Image Placeholder**: `![Report Page](images/report.png)`
+<img src="images/report.png" alt="Report Page" width="600"/>
+
 
 ### AI Analysis
 
@@ -369,7 +372,7 @@ curl -X POST http://localhost:3000/api/register -H "Content-Type: application/js
 - **Features**:
   - AI-driven insights and actionable recommendations using Gemini API
   - Highlights critical vulnerabilities
-- **Image Placeholder**: `![AI Analysis](images/ai.png)`
+<img src="images/ai.png" alt="AI Analysis" width="600"/>
 
 ### Users Page
 
@@ -378,7 +381,8 @@ curl -X POST http://localhost:3000/api/register -H "Content-Type: application/js
   - View, edit, or delete user accounts
   - Assign roles (admin/user)
   - Monitor user activity
-- **Image Placeholder**: `![Users Page](images/users.png)`
+<img src="images/users.png" alt="Users Page" width="600"/>
+
 
 ### Settings Page
 
@@ -387,7 +391,7 @@ curl -X POST http://localhost:3000/api/register -H "Content-Type: application/js
   - Enable/disable ARP spoofing detection
   - Set alert thresholds for notifications
   - Update account details
-- **Image Placeholder**: `![Settings Page](images/settings.png)`
+<img src="images/settings.png" alt="Settings Page" width="600"/>
 
 ## Contributing
 
@@ -402,3 +406,5 @@ Contributions are welcome! To contribute:
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for details.
+
+
