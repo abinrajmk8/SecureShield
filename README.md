@@ -332,7 +332,7 @@ curl -X POST http://localhost:3000/api/register -H "Content-Type: application/js
   - Enter username and password
   - Option to recover forgotten passwords
   - Redirects to dashboard upon successful login
-- **Image Placeholder**: `![Login Page](images/login-page.png)`
+- **Image Placeholder**: `![Login Page](images/login_page.png)`
 
 ### Dashboard
 
@@ -349,7 +349,7 @@ curl -X POST http://localhost:3000/api/register -H "Content-Type: application/js
   - Scan local network for devices (IP/MAC addresses)
   - Perform port scans to identify open ports and services
   - Filter devices by status or type
-- **Image Placeholder**: `![Network Page](images/network-page.png)`
+- **Image Placeholder**: `![Network Page](images/network.png)`
 
 ### Report Page
 
@@ -358,7 +358,7 @@ curl -X POST http://localhost:3000/api/register -H "Content-Type: application/js
   - Generate detailed reports from scan results
   - Filter reports by severity or status
   - Export reports in PDF/CSV formats
-- **Image Placeholder**: `![Report Page](images/report-page.png)`
+- **Image Placeholder**: `![Report Page](images/report.png)`
 
 ### AI Analysis
 
@@ -366,7 +366,7 @@ curl -X POST http://localhost:3000/api/register -H "Content-Type: application/js
 - **Features**:
   - AI-driven insights and actionable recommendations using Gemini API
   - Highlights critical vulnerabilities
-- **Image Placeholder**: `![AI Analysis](images/ai-analysis.png)`
+- **Image Placeholder**: `![AI Analysis](images/ai.png)`
 
 ### Users Page
 
@@ -375,7 +375,7 @@ curl -X POST http://localhost:3000/api/register -H "Content-Type: application/js
   - View, edit, or delete user accounts
   - Assign roles (admin/user)
   - Monitor user activity
-- **Image Placeholder**: `![Users Page](images/users-page.png)`
+- **Image Placeholder**: `![Users Page](images/users.png)`
 
 ### Settings Page
 
@@ -384,7 +384,7 @@ curl -X POST http://localhost:3000/api/register -H "Content-Type: application/js
   - Enable/disable ARP spoofing detection
   - Set alert thresholds for notifications
   - Update account details
-- **Image Placeholder**: `![Settings Page](images/settings-page.png)`
+- **Image Placeholder**: `![Settings Page](images/settings.png)`
 
 ## Contributing
 
