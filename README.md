@@ -363,7 +363,7 @@ curl -X POST http://localhost:3000/api/register -H "Content-Type: application/js
   - Generate detailed reports from scan results
   - Filter reports by severity or status
   - Export reports in PDF/CSV formats
-<img src="images/report.png" alt="Report Page" width="600"/>
+<img src="images/reports.png" alt="Report Page" width="600"/>
 
 
 ### AI Analysis
