@@ -1,3 +1,5 @@
+<img src="images/login_page.png" alt="Login Page" width="600"/>
+
 # SecureShield
 
 SecureShield (formerly Pentest Pro) is a modular, web-based penetration testing framework designed to simplify and automate network security tasks such as port scanning, vulnerability detection, and reporting. Built with a user-friendly interface, it caters to both cybersecurity enthusiasts and professionals, offering features like device discovery, AI-driven report analysis, and customizable settings. The application uses MongoDB Atlas for cloud-based database management.
