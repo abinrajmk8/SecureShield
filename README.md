@@ -405,6 +405,12 @@ Contributions are welcome! To contribute:
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+This project is licensed under a custom non-commercial license.  
+You may use, modify, and share it for personal and educational purposes only.
+
+**Commercial use is strictly prohibited without written permission.**
+
+**Feel free to contact for any queries:** [abinrajmk8@gmail.com](mailto:abinrajmk8@gmail.com)
+
 
 
