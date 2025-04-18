@@ -1,4 +1,4 @@
-<img src="images/login_page.png" alt="Login Page" width="600"/>
+
 
 # SecureShield
 
